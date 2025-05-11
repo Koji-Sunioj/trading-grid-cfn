@@ -1,0 +1,372 @@
+Parameters:
+  ClientCreds:
+    Description: base64 encoded json object of client ids with respective secrets
+    Type: String
+  TokenKey:
+    Description: key for generating jwt tokens to client
+    Type: String
+
+Resources:
+  PurchaseOrdersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: "purchase_order_id"
+          AttributeType: "N"
+      KeySchema:
+        - AttributeName: "purchase_order_id"
+          KeyType: "HASH"
+  PurchaseOrdersAmmendmentsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: "purchase_order_id"
+          AttributeType: "N"
+      KeySchema:
+        - AttributeName: "purchase_order_id"
+          KeyType: "HASH"
+  CognitoPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+      AutoVerifiedAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: false
+          RequireSymbols: false
+          RequireUppercase: false
+      AliasAttributes:
+        - preferred_username
+      VerificationMessageTemplate:
+        DefaultEmailOption: CONFIRM_WITH_CODE
+        EmailMessage: The verification code to your new account is {####}
+        EmailSubject: Verify your new account
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Mutable: false
+          Required: true
+        - Name: preferred_username
+          AttributeDataType: String
+          Mutable: true
+          Required: false
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref CognitoPool
+      AllowedOAuthFlows:
+        - code
+        - implicit
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthScopes:
+        - profile
+        - email
+        - openid
+        - aws.cognito.signin.user.admin
+      CallbackURLs:
+        - https://example.com
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      SupportedIdentityProviders:
+        - COGNITO
+  LambdaRole:
+    Type: AWS::IAM::Role
+    DependsOn:
+      - CognitoPool
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: record-label-api
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: "*"
+                Resource: !GetAtt PurchaseOrdersTable.Arn
+              - Effect: "Allow"
+                Action: "*"
+                Resource: !GetAtt PurchaseOrdersAmmendmentsTable.Arn
+              - Effect: "Allow"
+                Action: "logs:*"
+                Resource: "arn:aws:logs:*:*:*"
+  ERPLayer:
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      CompatibleRuntimes:
+        - python3.10
+      Content:
+        S3Bucket: black-metal-666
+        S3Key: lambda_layer.zip
+  AuthFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: auth.handler
+      Role: !GetAtt LambdaRole.Arn
+      Environment:
+        Variables:
+          USER_POOL_ID: !GetAtt UserPoolClient.ClientId
+          TOKEN_KEY: !Ref TokenKey
+          CLIENT_CREDS: !Ref ClientCreds
+      Code:
+        S3Bucket: black-metal-666
+        S3Key: functions.zip
+      Runtime: python3.10
+      Timeout: 60
+      Layers:
+        - !Ref ERPLayer
+  ERPFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: erp.handler
+      Role: !GetAtt LambdaRole.Arn
+      Environment:
+        Variables:
+          PO_TABLE: !Ref PurchaseOrdersTable
+          PO_AMMENDMENT_TABLE: !Ref PurchaseOrdersAmmendmentsTable
+          USER_POOL_ID: !GetAtt UserPoolClient.ClientId
+          TOKEN_KEY: !Ref TokenKey
+          CLIENT_CREDS: !Ref ClientCreds
+      Code:
+        S3Bucket: black-metal-666
+        S3Key: functions.zip
+      Runtime: python3.10
+      Timeout: 60
+      Layers:
+        - !Ref ERPLayer
+  LambdaLog:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${AuthFunction}"
+      RetentionInDays: 5
+  ERPLambdaLog:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${ERPFunction}"
+      RetentionInDays: 5
+  RestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Description: My Rest API
+      Name: MyApi
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+  POResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApi
+      ParentId: !GetAtt RestApi.RootResourceId
+      PathPart: "purchase-orders"
+  POClientResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApi
+      ParentId: !Ref POResource
+      PathPart: "client"
+  POMerchantResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApi
+      ParentId: !Ref POResource
+      PathPart: "merchant"
+  AuthResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApi
+      ParentId: !GetAtt RestApi.RootResourceId
+      PathPart: "auth"
+  MerchantAuthResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApi
+      ParentId: !Ref AuthResource
+      PathPart: "merchant"
+  ClientAuthResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApi
+      ParentId: !Ref AuthResource
+      PathPart: "client"
+  SignInResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApi
+      ParentId: !Ref AuthResource
+      PathPart: "sign-in"
+  AuthOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: OPTIONS
+      ResourceId: !Ref MerchantAuthResource
+      RestApiId: !Ref RestApi
+      AuthorizationType: None
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+              method.response.header.Access-Control-Allow-Origin: "'https://localhost:5173'"
+              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+              method.response.header.Access-Control-Allow-Credentials: "'true'"
+            StatusCode: "200"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Credentials: true
+          StatusCode: "200"
+  SignInOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: OPTIONS
+      ResourceId: !Ref SignInResource
+      RestApiId: !Ref RestApi
+      AuthorizationType: None
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+              method.response.header.Access-Control-Allow-Origin: "'https://localhost:5173'"
+              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+              method.response.header.Access-Control-Allow-Credentials: "'true'"
+            StatusCode: "200"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Credentials: true
+          StatusCode: "200"
+  MerchantOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: OPTIONS
+      ResourceId: !Ref POMerchantResource
+      RestApiId: !Ref RestApi
+      AuthorizationType: None
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+              method.response.header.Access-Control-Allow-Origin: "'https://localhost:5173'"
+              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+              method.response.header.Access-Control-Allow-Credentials: "'true'"
+            StatusCode: "200"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Credentials: true
+          StatusCode: "200"
+  MerchantGetPOMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: GET
+      AuthorizationType: NONE
+      ResourceId: !Ref POMerchantResource
+      RestApiId: !Ref RestApi
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ERPFunction.Arn}/invocations"
+  ClientPOMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: PUT
+      AuthorizationType: NONE
+      ResourceId: !Ref POClientResource
+      RestApiId: !Ref RestApi
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ERPFunction.Arn}/invocations"
+  ClientAuthMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: POST
+      AuthorizationType: NONE
+      ResourceId: !Ref ClientAuthResource
+      RestApiId: !Ref RestApi
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthFunction.Arn}/invocations"
+  MerchantAuthMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: GET
+      AuthorizationType: NONE
+      ResourceId: !Ref MerchantAuthResource
+      RestApiId: !Ref RestApi
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthFunction.Arn}/invocations"
+  SignInMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: POST
+      AuthorizationType: NONE
+      ResourceId: !Ref SignInResource
+      RestApiId: !Ref RestApi
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthFunction.Arn}/invocations"
+  AuthLambdaApiGatewayInvoke:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt AuthFunction.Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/*"
+  ERPLambdaApiGatewayInvoke:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt ERPFunction.Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/*"
+  Deployment:
+    DependsOn:
+      - AuthResource
+      - SignInResource
+      - SignInOptionsMethod
+      - AuthOptionsMethod
+      - SignInMethod
+      - MerchantAuthMethod
+      - ClientAuthMethod
+      - ClientPOMethod
+      - MerchantGetPOMethod
+    Type: "AWS::ApiGateway::Deployment"
+    Properties:
+      RestApiId: !Ref RestApi
+      Description: My deployment
+      StageName: prod

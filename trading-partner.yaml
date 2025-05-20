@@ -186,6 +186,12 @@ Resources:
       RestApiId: !Ref RestApi
       ParentId: !Ref POResource
       PathPart: "merchant"
+  POMerchantResourceWID:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApi
+      ParentId: !Ref POMerchantResource
+      PathPart: "{purchase_order_id}"
   AuthResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -285,6 +291,17 @@ Resources:
             method.response.header.Access-Control-Allow-Methods: true
             method.response.header.Access-Control-Allow-Credentials: true
           StatusCode: "200"
+  MerchantGetPOMethodWID:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: GET
+      AuthorizationType: NONE
+      ResourceId: !Ref POMerchantResourceWID
+      RestApiId: !Ref RestApi
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ERPFunction.Arn}/invocations"
   MerchantGetPOMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -364,6 +381,7 @@ Resources:
       - MerchantAuthMethod
       - ClientAuthMethod
       - ClientPOMethod
+      - MerchantGetPOMethodWID
       - MerchantGetPOMethod
     Type: "AWS::ApiGateway::Deployment"
     Properties:

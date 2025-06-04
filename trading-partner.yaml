@@ -1,7 +1,7 @@
 Parameters:
-  ClientCreds:
-    Description: base64 encoded json object of client ids with respective secrets
-    Type: String
+  #ClientCreds:
+  #  Description: base64 encoded json object of client ids with respective secrets
+  #  Type: String
   TokenKey:
     Description: key for generating jwt tokens to client
     Type: String
@@ -122,8 +122,8 @@ Resources:
       Environment:
         Variables:
           USER_POOL_ID: !GetAtt UserPoolClient.ClientId
-          TOKEN_KEY: !Ref TokenKey
-          CLIENT_CREDS: !Ref ClientCreds
+          #TOKEN_KEY: !Ref TokenKey
+          #CLIENT_CREDS: !Ref ClientCreds
       Code:
         S3Bucket: black-metal-666
         S3Key: functions.zip
@@ -142,7 +142,7 @@ Resources:
           PO_AMMENDMENT_TABLE: !Ref PurchaseOrdersAmmendmentsTable
           USER_POOL_ID: !GetAtt UserPoolClient.ClientId
           TOKEN_KEY: !Ref TokenKey
-          CLIENT_CREDS: !Ref ClientCreds
+          #CLIENT_CREDS: !Ref ClientCreds
       Code:
         S3Bucket: black-metal-666
         S3Key: functions.zip
@@ -204,12 +204,6 @@ Resources:
       RestApiId: !Ref RestApi
       ParentId: !Ref AuthResource
       PathPart: "merchant"
-  ClientAuthResource:
-    Type: AWS::ApiGateway::Resource
-    Properties:
-      RestApiId: !Ref RestApi
-      ParentId: !Ref AuthResource
-      PathPart: "client"
   SignInResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -324,17 +318,6 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ERPFunction.Arn}/invocations"
-  ClientAuthMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      HttpMethod: POST
-      AuthorizationType: NONE
-      ResourceId: !Ref ClientAuthResource
-      RestApiId: !Ref RestApi
-      Integration:
-        Type: AWS_PROXY
-        IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthFunction.Arn}/invocations"
   MerchantAuthMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -379,7 +362,6 @@ Resources:
       - AuthOptionsMethod
       - SignInMethod
       - MerchantAuthMethod
-      - ClientAuthMethod
       - ClientPOMethod
       - MerchantGetPOMethodWID
       - MerchantGetPOMethod

@@ -2,6 +2,9 @@ Parameters:
   TokenKey:
     Description: key for generating jwt tokens to client
     Type: String
+  MerchantHosts:
+    Description: accepted hosts for cross origin requests
+    Type: String
 
 Resources:
   PurchaseOrdersTable:
@@ -158,6 +161,24 @@ Resources:
       Timeout: 60
       Layers:
         - !Ref ERPLayer
+  CORSFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: cors.handler
+      Role: !GetAtt LambdaRole.Arn
+      Environment:
+        Variables:
+          ACCEPTED_ORIGINS: !Ref MerchantHosts
+      Code:
+        S3Bucket: black-metal-666
+        S3Key: functions.zip
+      Runtime: python3.10
+      Timeout: 60
+  CORSLog:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${CORSFunction}"
+      RetentionInDays: 5
   LambdaLog:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -194,6 +215,12 @@ Resources:
       RestApiId: !Ref RestApi
       ParentId: !Ref AdminResource
       PathPart: "routing-table"
+  RoutingTablewIDResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApi
+      ParentId: !Ref RoutingTableResource
+      PathPart: "{client_id}"
   POClientResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -230,106 +257,120 @@ Resources:
       RestApiId: !Ref RestApi
       ParentId: !Ref AuthResource
       PathPart: "sign-in"
-  RoutingTableOptionsMethod:
+  RoutingTablewIDOptionsMethod:
     Type: AWS::ApiGateway::Method
     Properties:
       HttpMethod: OPTIONS
-      ResourceId: !Ref RoutingTableResource
-      RestApiId: !Ref RestApi
       AuthorizationType: None
-      Integration:
-        IntegrationResponses:
-          - ResponseParameters:
-              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
-              method.response.header.Access-Control-Allow-Origin: "'https://localhost:5173'"
-              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
-              method.response.header.Access-Control-Allow-Credentials: "'true'"
-            StatusCode: "200"
-        RequestTemplates:
-          application/json: "{ statusCode: 200 }"
-        Type: MOCK
-      MethodResponses:
-        - ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: true
-            method.response.header.Access-Control-Allow-Origin: true
-            method.response.header.Access-Control-Allow-Methods: true
-            method.response.header.Access-Control-Allow-Credentials: true
-          StatusCode: "200"
-  AuthOptionsMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      HttpMethod: OPTIONS
-      ResourceId: !Ref MerchantAuthResource
+      ResourceId: !Ref RoutingTablewIDResource
       RestApiId: !Ref RestApi
-      AuthorizationType: None
       Integration:
-        IntegrationResponses:
-          - ResponseParameters:
-              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
-              method.response.header.Access-Control-Allow-Origin: "'https://localhost:5173'"
-              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
-              method.response.header.Access-Control-Allow-Credentials: "'true'"
-            StatusCode: "200"
-        RequestTemplates:
-          application/json: "{ statusCode: 200 }"
-        Type: MOCK
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CORSFunction.Arn}/invocations"
       MethodResponses:
-        - ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: true
-            method.response.header.Access-Control-Allow-Origin: true
-            method.response.header.Access-Control-Allow-Methods: true
-            method.response.header.Access-Control-Allow-Credentials: true
-          StatusCode: "200"
-  SignInOptionsMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      HttpMethod: OPTIONS
-      ResourceId: !Ref SignInResource
-      RestApiId: !Ref RestApi
-      AuthorizationType: None
-      Integration:
-        IntegrationResponses:
-          - ResponseParameters:
-              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
-              method.response.header.Access-Control-Allow-Origin: "'https://localhost:5173'"
-              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
-              method.response.header.Access-Control-Allow-Credentials: "'true'"
-            StatusCode: "200"
-        RequestTemplates:
-          application/json: "{ statusCode: 200 }"
-        Type: MOCK
-      MethodResponses:
-        - ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: true
-            method.response.header.Access-Control-Allow-Origin: true
-            method.response.header.Access-Control-Allow-Methods: true
-            method.response.header.Access-Control-Allow-Credentials: true
-          StatusCode: "200"
-  MerchantOptionsMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      HttpMethod: OPTIONS
-      ResourceId: !Ref POMerchantResource
-      RestApiId: !Ref RestApi
-      AuthorizationType: None
-      Integration:
-        IntegrationResponses:
-          - ResponseParameters:
-              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
-              method.response.header.Access-Control-Allow-Origin: "'https://localhost:5173'"
-              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
-              method.response.header.Access-Control-Allow-Credentials: "'true'"
-            StatusCode: "200"
-        RequestTemplates:
-          application/json: "{ statusCode: 200 }"
-        Type: MOCK
-      MethodResponses:
-        - ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: true
-            method.response.header.Access-Control-Allow-Origin: true
-            method.response.header.Access-Control-Allow-Methods: true
-            method.response.header.Access-Control-Allow-Credentials: true
-          StatusCode: "200"
+        - StatusCode: 200
+  #RoutingTableOptionsMethod:
+  #  Type: AWS::ApiGateway::Method
+  #  Properties:
+  #    HttpMethod: OPTIONS
+  #    ResourceId: !Ref RoutingTableResource
+  #    RestApiId: !Ref RestApi
+  #    AuthorizationType: None
+  #    Integration:
+  #      IntegrationResponses:
+  #        - ResponseParameters:
+  #            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+  #            method.response.header.Access-Control-Allow-Origin: "'https://localhost:5173'"
+  #            method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+  #            method.response.header.Access-Control-Allow-Credentials: "'true'"
+  #         StatusCode: "200"
+  #      RequestTemplates:
+  #        application/json: "{ statusCode: 200 }"
+  #      Type: MOCK
+  #    MethodResponses:
+  #      - ResponseParameters:
+  #          method.response.header.Access-Control-Allow-Headers: true
+  #          method.response.header.Access-Control-Allow-Origin: true
+  #          method.response.header.Access-Control-Allow-Methods: true
+  #          method.response.header.Access-Control-Allow-Credentials: true
+  #        StatusCode: "200"
+  #RoutingTablewIDOptionsMethod:
+  # Type: AWS::ApiGateway::Method
+  #  Properties:
+  #    HttpMethod: OPTIONS
+  #    ResourceId: !Ref RoutingTablewIDResource
+  #    RestApiId: !Ref RestApi
+  #    AuthorizationType: None
+  #    Integration:
+  #      IntegrationResponses:
+  #        - ResponseParameters:
+  #            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+  #            method.response.header.Access-Control-Allow-Origin: "'https://localhost:5173'"
+  #            method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+  #            method.response.header.Access-Control-Allow-Credentials: "'true'"
+  #          StatusCode: "200"
+  #      RequestTemplates:
+  #       application/json: "{ statusCode: 200 }"
+  #      Type: MOCK
+  #    MethodResponses:
+  #      - ResponseParameters:
+  #          method.response.header.Access-Control-Allow-Headers: true
+  #          method.response.header.Access-Control-Allow-Origin: true
+  #          method.response.header.Access-Control-Allow-Methods: true
+  #          method.response.header.Access-Control-Allow-Credentials: true
+  #        StatusCode: "200"
+  #AuthOptionsMethod:
+  #  Type: AWS::ApiGateway::Method
+  #  Properties:
+  #    HttpMethod: OPTIONS
+  #    ResourceId: !Ref MerchantAuthResource
+  #    RestApiId: !Ref RestApi
+  #    AuthorizationType: None
+  #    Integration:
+  #      IntegrationResponses:
+  #        - ResponseParameters:
+  #            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+  #            method.response.header.Access-Control-Allow-Origin: "'https://localhost:5173'"
+  #            method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+  #            method.response.header.Access-Control-Allow-Credentials: "'true'"
+  #          StatusCode: "200"
+  #     RequestTemplates:
+  #        application/json: "{ statusCode: 200 }"
+  #      Type: MOCK
+  #    MethodResponses:
+  #      - ResponseParameters:
+  #          method.response.header.Access-Control-Allow-Headers: true
+  #          method.response.header.Access-Control-Allow-Origin: true
+  #          method.response.header.Access-Control-Allow-Methods: true
+  #          method.response.header.Access-Control-Allow-Credentials: true
+  #        StatusCode: "200"
+  #SignInOptionsMethod:
+  #  Type: AWS::ApiGateway::Method
+  #  Properties:
+  #    HttpMethod: OPTIONS
+  #    AuthorizationType: None
+  #    ResourceId: !Ref SignInResource
+  #   RestApiId: !Ref RestApi
+  #    Integration:
+  #      Type: AWS_PROXY
+  #      IntegrationHttpMethod: POST
+  #      Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CORSFunction.Arn}/invocations"
+  #    MethodResponses:
+  #      - StatusCode: 200
+  #MerchantOptionsMethod:
+  #  Type: AWS::ApiGateway::Method
+  #  Properties:
+  #    HttpMethod: OPTIONS
+  #    AuthorizationType: None
+  #    ResourceId: !Ref POMerchantResource
+  #    RestApiId: !Ref RestApi
+  #    Integration:
+  #      Type: AWS_PROXY
+  #      IntegrationHttpMethod: POST
+  #      Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CORSFunction.Arn}/invocations"
+  #    MethodResponses:
+  #      - StatusCode: 200
   MerchantGetPOMethodWID:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -352,10 +393,32 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ERPFunction.Arn}/invocations"
-  RoutingTableMethod:
+  RoutingTableGETMethod:
     Type: AWS::ApiGateway::Method
     Properties:
-      HttpMethod: PUT
+      HttpMethod: GET
+      AuthorizationType: NONE
+      ResourceId: !Ref RoutingTableResource
+      RestApiId: !Ref RestApi
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ERPFunction.Arn}/invocations"
+  RoutingTableDeleteMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: DELETE
+      AuthorizationType: NONE
+      ResourceId: !Ref RoutingTablewIDResource
+      RestApiId: !Ref RestApi
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ERPFunction.Arn}/invocations"
+  RoutingTablePOSTTMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: POST
       AuthorizationType: NONE
       ResourceId: !Ref RoutingTableResource
       RestApiId: !Ref RestApi
@@ -396,6 +459,13 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthFunction.Arn}/invocations"
+  CORSLambdaApiGatewayInvoke:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt CORSFunction.Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/*"
   AuthLambdaApiGatewayInvoke:
     Type: AWS::Lambda::Permission
     Properties:
@@ -412,14 +482,16 @@ Resources:
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/*"
   Deployment:
     DependsOn:
-      - SignInOptionsMethod
-      - AuthOptionsMethod
+      #- SignInOptionsMethod
+      #- AuthOptionsMethod
       - SignInMethod
       - MerchantAuthMethod
       - ClientPOMethod
       - MerchantGetPOMethodWID
       - MerchantGetPOMethod
-      - RoutingTableMethod
+      - RoutingTableGETMethod
+      - RoutingTablePOSTTMethod
+      - RoutingTableDeleteMethod
     Type: "AWS::ApiGateway::Deployment"
     Properties:
       RestApiId: !Ref RestApi

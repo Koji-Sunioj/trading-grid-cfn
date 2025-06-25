@@ -201,23 +201,23 @@ Resources:
       EndpointConfiguration:
         Types:
           - REGIONAL
-  POResource:
+  AuthResource:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref RestApi
       ParentId: !GetAtt RestApi.RootResourceId
-      PathPart: "purchase-orders"
-  AdminResource:
+      PathPart: "auth"
+  MerchantResource:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref RestApi
       ParentId: !GetAtt RestApi.RootResourceId
-      PathPart: "admin"
+      PathPart: "merchant"
   RoutingTableResource:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref RestApi
-      ParentId: !Ref AdminResource
+      ParentId: !Ref MerchantResource
       PathPart: "routing-table"
   RoutingTablewIDResource:
     Type: AWS::ApiGateway::Resource
@@ -225,23 +225,17 @@ Resources:
       RestApiId: !Ref RestApi
       ParentId: !Ref RoutingTableResource
       PathPart: "{client_id}"
-  POClientResource:
+  POResource:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref RestApi
-      ParentId: !Ref POResource
-      PathPart: "client"
-  POMerchantResource:
-    Type: AWS::ApiGateway::Resource
-    Properties:
-      RestApiId: !Ref RestApi
-      ParentId: !Ref POResource
-      PathPart: "merchant"
+      ParentId: !Ref MerchantResource
+      PathPart: "purchase-orders"
   POMerchantResourceWClientID:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref RestApi
-      ParentId: !Ref POMerchantResource
+      ParentId: !Ref POResource
       PathPart: "{client_id}"
   POMerchantResourceWID:
     Type: AWS::ApiGateway::Resource
@@ -249,24 +243,18 @@ Resources:
       RestApiId: !Ref RestApi
       ParentId: !Ref POMerchantResourceWClientID
       PathPart: "{purchase_order_id}"
-  AuthResource:
+  ClientResource:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref RestApi
       ParentId: !GetAtt RestApi.RootResourceId
-      PathPart: "auth"
-  MerchantAuthResource:
+      PathPart: "client"
+  ClientPOResource:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref RestApi
-      ParentId: !Ref AuthResource
-      PathPart: "merchant"
-  SignInResource:
-    Type: AWS::ApiGateway::Resource
-    Properties:
-      RestApiId: !Ref RestApi
-      ParentId: !Ref AuthResource
-      PathPart: "sign-in"
+      ParentId: !Ref ClientResource
+      PathPart: "purchase-orders"
   RoutingTablewIDOptionsMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -307,7 +295,7 @@ Resources:
     Properties:
       HttpMethod: GET
       AuthorizationType: NONE
-      ResourceId: !Ref POMerchantResource
+      ResourceId: !Ref POResource
       RestApiId: !Ref RestApi
       Integration:
         Type: AWS_PROXY
@@ -351,7 +339,7 @@ Resources:
     Properties:
       HttpMethod: PUT
       AuthorizationType: NONE
-      ResourceId: !Ref POClientResource
+      ResourceId: !Ref ClientPOResource
       RestApiId: !Ref RestApi
       Integration:
         Type: AWS_PROXY
@@ -362,7 +350,7 @@ Resources:
     Properties:
       HttpMethod: GET
       AuthorizationType: NONE
-      ResourceId: !Ref MerchantAuthResource
+      ResourceId: !Ref AuthResource
       RestApiId: !Ref RestApi
       Integration:
         Type: AWS_PROXY
@@ -373,7 +361,7 @@ Resources:
     Properties:
       HttpMethod: POST
       AuthorizationType: NONE
-      ResourceId: !Ref SignInResource
+      ResourceId: !Ref AuthResource
       RestApiId: !Ref RestApi
       Integration:
         Type: AWS_PROXY
@@ -401,15 +389,15 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/*"
   Deployment:
-    DependsOn:
-      - SignInMethod
-      - MerchantAuthMethod
-      - ClientPOMethod
-      - MerchantGetPOMethodWID
-      - MerchantGetPOMethod
-      - RoutingTableGETMethod
-      - RoutingTablePOSTTMethod
-      - RoutingTableDeleteMethod
+    #DependsOn:
+    #  - SignInMethod
+    #  - MerchantAuthMethod
+    #  - ClientPOMethod
+    #  - MerchantGetPOMethodWID
+    #  - MerchantGetPOMethod
+    #  - RoutingTableGETMethod
+    #  - RoutingTablePOSTTMethod
+    #  - RoutingTableDeleteMethod
     Type: "AWS::ApiGateway::Deployment"
     Properties:
       RestApiId: !Ref RestApi

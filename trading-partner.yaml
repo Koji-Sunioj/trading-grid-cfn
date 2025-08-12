@@ -28,9 +28,13 @@ Resources:
       AttributeDefinitions:
         - AttributeName: "purchase_order_id"
           AttributeType: "N"
+        - AttributeName: "client_id"
+          AttributeType: "S"
       KeySchema:
         - AttributeName: "purchase_order_id"
           KeyType: "HASH"
+        - AttributeName: "client_id"
+          KeyType: "RANGE"
   ClientRoutingTable:
     Type: AWS::DynamoDB::Table
     Properties:

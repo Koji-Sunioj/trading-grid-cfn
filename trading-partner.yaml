@@ -2,6 +2,9 @@ Parameters:
   TokenKey:
     Description: key for generating jwt tokens to client
     Type: String
+  StoreCoords:
+    Description: accepted hosts for cross origin requests
+    Type: String
   MerchantHosts:
     Description: accepted hosts for cross origin requests
     Type: String
@@ -162,6 +165,7 @@ Resources:
           ROUTING_TABLE: !Ref ClientRoutingTable
           USER_POOL_ID: !GetAtt UserPoolClient.ClientId
           TOKEN_KEY: !Ref TokenKey
+          STORE_COORDS: !Ref StoreCoords
       Code:
         S3Bucket: black-metal-666
         S3Key: functions.zip

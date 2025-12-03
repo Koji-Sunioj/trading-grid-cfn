@@ -263,6 +263,12 @@ Resources:
       RestApiId: !Ref RestApi
       ParentId: !Ref ClientResource
       PathPart: "purchase-orders"
+  ClientDispatchCostResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApi
+      ParentId: !Ref ClientResource
+      PathPart: "dispatch-cost"
   RoutingTablewIDOptionsMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -348,6 +354,17 @@ Resources:
       HttpMethod: PUT
       AuthorizationType: NONE
       ResourceId: !Ref ClientPOResource
+      RestApiId: !Ref RestApi
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ERPFunction.Arn}/invocations"
+  ClientDispatchCostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: GET
+      AuthorizationType: NONE
+      ResourceId: !Ref ClientDispatchCostResource
       RestApiId: !Ref RestApi
       Integration:
         Type: AWS_PROXY

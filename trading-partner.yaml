@@ -10,6 +10,16 @@ Parameters:
     Type: String
 
 Resources:
+  ShipmentOrdersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: "dispatch_id"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "dispatch_id"
+          KeyType: "HASH"
   PurchaseOrdersTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -166,6 +176,7 @@ Resources:
           USER_POOL_ID: !GetAtt UserPoolClient.ClientId
           TOKEN_KEY: !Ref TokenKey
           STORE_COORDS: !Ref StoreCoords
+          DISPATCH_TABLE: !Ref ShipmentOrdersTable
       Code:
         S3Bucket: black-metal-666
         S3Key: functions.zip

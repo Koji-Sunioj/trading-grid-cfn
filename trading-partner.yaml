@@ -130,6 +130,9 @@ Resources:
             Statement:
               - Effect: "Allow"
                 Action: "*"
+                Resource: !GetAtt ShipmentOrdersTable.Arn
+              - Effect: "Allow"
+                Action: "*"
                 Resource: !GetAtt PurchaseOrdersTable.Arn
               - Effect: "Allow"
                 Action: "*"

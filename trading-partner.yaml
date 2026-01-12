@@ -289,6 +289,12 @@ Resources:
       RestApiId: !Ref RestApi
       ParentId: !Ref MerchantResource
       PathPart: "dispatches"
+  DispatchResourceWID:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApi
+      ParentId: !Ref DispatchResource
+      PathPart: "{dispatch_id}"
   RoutingTablewIDOptionsMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -396,6 +402,17 @@ Resources:
       HttpMethod: GET
       AuthorizationType: NONE
       ResourceId: !Ref DispatchResource
+      RestApiId: !Ref RestApi
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ERPFunction.Arn}/invocations"
+  MerchantGetDispatchWIDMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: GET
+      AuthorizationType: NONE
+      ResourceId: !Ref DispatchResourceWID
       RestApiId: !Ref RestApi
       Integration:
         Type: AWS_PROXY

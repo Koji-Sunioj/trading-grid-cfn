@@ -418,6 +418,17 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ERPFunction.Arn}/invocations"
+  MerchantPostDispatchWIDMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: POST
+      AuthorizationType: NONE
+      ResourceId: !Ref DispatchResourceWID
+      RestApiId: !Ref RestApi
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ERPFunction.Arn}/invocations"
   MerchantAuthMethod:
     Type: AWS::ApiGateway::Method
     Properties:

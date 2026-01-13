@@ -283,6 +283,18 @@ Resources:
       RestApiId: !Ref RestApi
       ParentId: !Ref ClientResource
       PathPart: "dispatch-cost"
+  ClientDispatchPOSTResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApi
+      ParentId: !Ref ClientResource
+      PathPart: "dispatches"
+  ClientDispatchPATCHWIDResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApi
+      ParentId: !Ref ClientDispatchPOSTResource
+      PathPart: "{dispatch_id}"
   DispatchResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -391,6 +403,17 @@ Resources:
       HttpMethod: GET
       AuthorizationType: NONE
       ResourceId: !Ref ClientDispatchCostResource
+      RestApiId: !Ref RestApi
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ERPFunction.Arn}/invocations"
+  ClientDispatchPATCHtMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: PATCH
+      AuthorizationType: NONE
+      ResourceId: !Ref ClientDispatchPATCHWIDResource
       RestApiId: !Ref RestApi
       Integration:
         Type: AWS_PROXY

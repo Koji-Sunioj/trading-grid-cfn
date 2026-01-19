@@ -236,6 +236,11 @@ Resources:
     Properties:
       LogGroupName: !Sub "/aws/lambda/${ERPFunction}"
       RetentionInDays: 5
+  ClientLambdaLog:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${ClientERPFunction}"
+      RetentionInDays: 5
   RestApi:
     Type: AWS::ApiGateway::RestApi
     Properties:
@@ -417,7 +422,7 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ERPFunction.Arn}/invocations"
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ClientERPFunction.Arn}/invocations"
   ClientDispatchCostMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -428,7 +433,7 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ERPFunction.Arn}/invocations"
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ClientERPFunction.Arn}/invocations"
   ClientDispatchPATCHtMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -439,7 +444,7 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ERPFunction.Arn}/invocations"
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ClientERPFunction.Arn}/invocations"
   MerchantGetDispatchMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -514,6 +519,13 @@ Resources:
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !GetAtt ERPFunction.Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/*"
+  ClientERPLambdaApiGatewayInvoke:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt ClientERPFunction.Arn
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/*"
   Deployment:

@@ -166,17 +166,16 @@ Resources:
       Timeout: 60
       Layers:
         - !Ref ERPLayer
-  ERPFunction:
+  MerchantERPFunction:
     Type: AWS::Lambda::Function
     Properties:
-      Handler: erp.handler
+      Handler: merchant_erp.handler
       Role: !GetAtt LambdaRole.Arn
       Environment:
         Variables:
           PO_TABLE: !Ref PurchaseOrdersTable
           PO_AMMENDMENT_TABLE: !Ref PurchaseOrdersAmmendmentsTable
           ROUTING_TABLE: !Ref ClientRoutingTable
-          #USER_POOL_ID: !GetAtt UserPoolClient.ClientId
           TOKEN_KEY: !Ref TokenKey
           STORE_COORDS: !Ref StoreCoords
           DISPATCH_TABLE: !Ref ShipmentOrdersTable
@@ -197,7 +196,6 @@ Resources:
           PO_TABLE: !Ref PurchaseOrdersTable
           PO_AMMENDMENT_TABLE: !Ref PurchaseOrdersAmmendmentsTable
           ROUTING_TABLE: !Ref ClientRoutingTable
-          #USER_POOL_ID: !GetAtt UserPoolClient.ClientId
           TOKEN_KEY: !Ref TokenKey
           STORE_COORDS: !Ref StoreCoords
           DISPATCH_TABLE: !Ref ShipmentOrdersTable
@@ -231,10 +229,10 @@ Resources:
     Properties:
       LogGroupName: !Sub "/aws/lambda/${AuthFunction}"
       RetentionInDays: 5
-  ERPLambdaLog:
+  MerchantERPLambdaLog:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/${ERPFunction}"
+      LogGroupName: !Sub "/aws/lambda/${MerchantERPFunction}"
       RetentionInDays: 5
   ClientLambdaLog:
     Type: AWS::Logs::LogGroup
@@ -356,7 +354,7 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ERPFunction.Arn}/invocations"
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MerchantERPFunction.Arn}/invocations"
   MerchantPostPOMethodWID:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -367,7 +365,7 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ERPFunction.Arn}/invocations"
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MerchantERPFunction.Arn}/invocations"
   MerchantGetPOMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -378,7 +376,7 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ERPFunction.Arn}/invocations"
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MerchantERPFunction.Arn}/invocations"
   RoutingTableGETMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -389,7 +387,7 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ERPFunction.Arn}/invocations"
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MerchantERPFunction.Arn}/invocations"
   RoutingTableDeleteMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -400,7 +398,7 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ERPFunction.Arn}/invocations"
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MerchantERPFunction.Arn}/invocations"
   RoutingTablePOSTTMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -411,7 +409,51 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ERPFunction.Arn}/invocations"
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MerchantERPFunction.Arn}/invocations"
+  MerchantGetDispatchMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: GET
+      AuthorizationType: NONE
+      ResourceId: !Ref DispatchResource
+      RestApiId: !Ref RestApi
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MerchantERPFunction.Arn}/invocations"
+  MerchantGetDispatchWIDMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: GET
+      AuthorizationType: NONE
+      ResourceId: !Ref DispatchResourceWID
+      RestApiId: !Ref RestApi
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MerchantERPFunction.Arn}/invocations"
+  MerchantPostDispatchWIDMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: POST
+      AuthorizationType: NONE
+      ResourceId: !Ref DispatchResourceWID
+      RestApiId: !Ref RestApi
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MerchantERPFunction.Arn}/invocations"
+  MerchantAuthMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: GET
+      AuthorizationType: NONE
+      ResourceId: !Ref AuthResource
+      RestApiId: !Ref RestApi
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthFunction.Arn}/invocations"
   ClientPOMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -445,50 +487,6 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ClientERPFunction.Arn}/invocations"
-  MerchantGetDispatchMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      HttpMethod: GET
-      AuthorizationType: NONE
-      ResourceId: !Ref DispatchResource
-      RestApiId: !Ref RestApi
-      Integration:
-        Type: AWS_PROXY
-        IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ERPFunction.Arn}/invocations"
-  MerchantGetDispatchWIDMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      HttpMethod: GET
-      AuthorizationType: NONE
-      ResourceId: !Ref DispatchResourceWID
-      RestApiId: !Ref RestApi
-      Integration:
-        Type: AWS_PROXY
-        IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ERPFunction.Arn}/invocations"
-  MerchantPostDispatchWIDMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      HttpMethod: POST
-      AuthorizationType: NONE
-      ResourceId: !Ref DispatchResourceWID
-      RestApiId: !Ref RestApi
-      Integration:
-        Type: AWS_PROXY
-        IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ERPFunction.Arn}/invocations"
-  MerchantAuthMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      HttpMethod: GET
-      AuthorizationType: NONE
-      ResourceId: !Ref AuthResource
-      RestApiId: !Ref RestApi
-      Integration:
-        Type: AWS_PROXY
-        IntegrationHttpMethod: POST
-        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthFunction.Arn}/invocations"
   SignInMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -514,11 +512,11 @@ Resources:
       FunctionName: !GetAtt AuthFunction.Arn
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/*"
-  ERPLambdaApiGatewayInvoke:
+  MerchantERPLambdaApiGatewayInvoke:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !GetAtt ERPFunction.Arn
+      FunctionName: !GetAtt MerchantERPFunction.Arn
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/*"
   ClientERPLambdaApiGatewayInvoke:

@@ -219,6 +219,18 @@ Resources:
         S3Key: functions.zip
       Runtime: python3.10
       Timeout: 60
+  UTILSFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: utils.handler
+      Role: !GetAtt LambdaRole.Arn
+      Code:
+        S3Bucket: black-metal-666
+        S3Key: functions.zip
+      Runtime: python3.10
+      Timeout: 60
+      Layers:
+        - !Ref ERPLayer
   CORSLog:
     Type: AWS::Logs::LogGroup
     Properties:

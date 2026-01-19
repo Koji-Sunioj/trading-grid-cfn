@@ -176,7 +176,28 @@ Resources:
           PO_TABLE: !Ref PurchaseOrdersTable
           PO_AMMENDMENT_TABLE: !Ref PurchaseOrdersAmmendmentsTable
           ROUTING_TABLE: !Ref ClientRoutingTable
-          USER_POOL_ID: !GetAtt UserPoolClient.ClientId
+          #USER_POOL_ID: !GetAtt UserPoolClient.ClientId
+          TOKEN_KEY: !Ref TokenKey
+          STORE_COORDS: !Ref StoreCoords
+          DISPATCH_TABLE: !Ref ShipmentOrdersTable
+      Code:
+        S3Bucket: black-metal-666
+        S3Key: functions.zip
+      Runtime: python3.10
+      Timeout: 60
+      Layers:
+        - !Ref ERPLayer
+  ClientERPFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: client_erp.handler
+      Role: !GetAtt LambdaRole.Arn
+      Environment:
+        Variables:
+          PO_TABLE: !Ref PurchaseOrdersTable
+          PO_AMMENDMENT_TABLE: !Ref PurchaseOrdersAmmendmentsTable
+          ROUTING_TABLE: !Ref ClientRoutingTable
+          #USER_POOL_ID: !GetAtt UserPoolClient.ClientId
           TOKEN_KEY: !Ref TokenKey
           STORE_COORDS: !Ref StoreCoords
           DISPATCH_TABLE: !Ref ShipmentOrdersTable

@@ -217,6 +217,10 @@ Resources:
     Properties:
       Handler: utils.handler
       Role: !GetAtt LambdaRole.Arn
+      Environment:
+        Variables:
+          STORE_COORDS: !Ref StoreCoords
+          TOKEN_KEY: !Ref TokenKey
       Code:
         S3Bucket: black-metal-666
         S3Key: functions.zip
@@ -224,6 +228,11 @@ Resources:
       Timeout: 60
       Layers:
         - !Ref ERPLayer
+  UTILSLog:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${UTILSFunction}"
+      RetentionInDays: 5
   CORSLog:
     Type: AWS::Logs::LogGroup
     Properties:

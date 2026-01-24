@@ -215,6 +215,8 @@ Resources:
         S3Key: functions.zip
       Runtime: python3.10
       Timeout: 60
+      Layers:
+        - !Ref ERPLayer
   UTILSFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -227,11 +229,6 @@ Resources:
       Timeout: 60
       Layers:
         - !Ref ERPLayer
-  UTILSLog:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub "/aws/lambda/${UTILSFunction}"
-      RetentionInDays: 5
   CORSLog:
     Type: AWS::Logs::LogGroup
     Properties:

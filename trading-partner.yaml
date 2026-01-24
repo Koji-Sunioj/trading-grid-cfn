@@ -151,6 +151,19 @@ Resources:
       Content:
         S3Bucket: black-metal-666
         S3Key: lambda_layer.zip
+  CORSFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: cors.handler
+      Role: !GetAtt LambdaRole.Arn
+      Environment:
+        Variables:
+          ACCEPTED_ORIGINS: !Ref MerchantHosts
+      Code:
+        S3Bucket: black-metal-666
+        S3Key: functions.zip
+      Runtime: python3.10
+      Timeout: 60
   AuthFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -164,8 +177,6 @@ Resources:
         S3Key: functions.zip
       Runtime: python3.10
       Timeout: 60
-      Layers:
-        - !Ref ERPLayer
   MerchantERPFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -174,11 +185,10 @@ Resources:
       Environment:
         Variables:
           PO_TABLE: !Ref PurchaseOrdersTable
-          PO_AMMENDMENT_TABLE: !Ref PurchaseOrdersAmmendmentsTable
           ROUTING_TABLE: !Ref ClientRoutingTable
-          TOKEN_KEY: !Ref TokenKey
-          STORE_COORDS: !Ref StoreCoords
           DISPATCH_TABLE: !Ref ShipmentOrdersTable
+          PO_AMMENDMENT_TABLE: !Ref PurchaseOrdersAmmendmentsTable
+          TOKEN_KEY: !Ref TokenKey
       Code:
         S3Bucket: black-metal-666
         S3Key: functions.zip
@@ -194,26 +204,9 @@ Resources:
       Environment:
         Variables:
           PO_TABLE: !Ref PurchaseOrdersTable
-          PO_AMMENDMENT_TABLE: !Ref PurchaseOrdersAmmendmentsTable
           ROUTING_TABLE: !Ref ClientRoutingTable
-          TOKEN_KEY: !Ref TokenKey
-          STORE_COORDS: !Ref StoreCoords
           DISPATCH_TABLE: !Ref ShipmentOrdersTable
-      Code:
-        S3Bucket: black-metal-666
-        S3Key: functions.zip
-      Runtime: python3.10
-      Timeout: 60
-      Layers:
-        - !Ref ERPLayer
-  CORSFunction:
-    Type: AWS::Lambda::Function
-    Properties:
-      Handler: cors.handler
-      Role: !GetAtt LambdaRole.Arn
-      Environment:
-        Variables:
-          ACCEPTED_ORIGINS: !Ref MerchantHosts
+          PO_AMMENDMENT_TABLE: !Ref PurchaseOrdersAmmendmentsTable
       Code:
         S3Bucket: black-metal-666
         S3Key: functions.zip

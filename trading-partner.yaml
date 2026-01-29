@@ -537,15 +537,21 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/*"
   Deployment:
-    #DependsOn:
-    #  - SignInMethod
-    #  - MerchantAuthMethod
-    #  - ClientPOMethod
-    #  - MerchantGetPOMethodWID
-    #  - MerchantGetPOMethod
-    #  - RoutingTableGETMethod
-    #  - RoutingTablePOSTTMethod
-    #  - RoutingTableDeleteMethod
+    DependsOn:
+      - RoutingTableGETMethod
+      - RoutingTablePOSTTMethod
+      - RoutingTablewIDOptionsMethod
+      - MerchantAuthMethod
+      - MerchantGetPOMethod
+      - MerchantGetPOMethodWID
+      - MerchantPostPOMethodWID
+      - MerchantGetDispatchMethod
+      - MerchantGetDispatchWIDMethod
+      - MerchantPostDispatchWIDMethod
+      - ClientPOMethod
+      - ClientDispatchCostMethod
+      - ClientDispatchPATCHtMethod
+      - SignInMethod
     Type: "AWS::ApiGateway::Deployment"
     Properties:
       RestApiId: !Ref RestApi

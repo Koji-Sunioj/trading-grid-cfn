@@ -7,7 +7,7 @@ jobs:
   initialize:
     runs-on: "ubuntu-latest"
     steps:
-      - name: check restapi status
+      - name: restapi-init 
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -17,12 +17,12 @@ jobs:
 
           if [[ $API_STATUS == 1 ]]
           then
-            echo "execute deployment"
+            echo "rest api running, no action"
           else
-            echo "app is running"
+            echo "rest api is not running, execute"
             #exit 1
           fi
-      - name: check webapp status
+      - name: webapp-init
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -32,8 +32,8 @@ jobs:
 
           if [[ $WEBAPP_STATUS == 1 ]]
           then
-            echo "execute deployment"
+            echo "web app is running, no action"
           else
-            echo "web app is running"
+            echo "web app is not running, execute"
             #exit 1
           fi

@@ -1,0 +1,13 @@
+name: update
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update-stack:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: update
+        run: echo "hey"
+
+      

@@ -1,0 +1,33 @@
+name: initiate
+
+on:
+  workflow_dispatch:
+
+jobs:
+  initialize:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: check restapi status
+        run: |
+          aws cloudformation describe-stacks --stack-name merchant-api --region eu-north-1 | jq length
+          API_STATUS=$?
+
+          if [[ $API_STATUS == 1 ]]
+          then
+            echo "execute deployment"
+          else
+            echo "app is running"
+            exit 1
+          fi
+      - name: check webapp status
+        run: |
+          aws cloudformation describe-stacks --stack-name merchant-webapp --region eu-north-1 | jq length
+          WEBAPP_STATUS=$?
+
+          if [[ $WEBAPP_STATUS == 1 ]]
+          then
+            echo "execute deployment"
+          else
+            echo "web app is running"
+            exit 1
+          fi

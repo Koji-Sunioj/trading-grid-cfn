@@ -8,9 +8,13 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
       - name: restapi-init 
+        uses: actions/checkout@latest
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TOKEN_KEY: ${{ secrets.DISTANCE_API_KEY }}
+          STORE_COORDS: ${{ secrets.MERCHANT_COORDS }}
+          MERCHANT_HOSTS: ${{ secrets.ACCEPTED_ORIGINS }}
         run: |
           aws cloudformation describe-stacks --stack-name merchant-api --region eu-north-1 | jq length
           API_STATUS=$?
@@ -20,8 +24,47 @@ jobs:
             echo "rest api running, no action"
           else
             echo "rest api is not running, execute"
-            #exit 1
+
+            aws cloudformation deploy --tack-name merchant-api \
+              --template-body file://trading-partner.yaml \
+              --capabilities CAPABILITY_IAM \
+              --region eu-north-1
+              --parameters ParameterKey=TokenKey,ParameterValue=$TOKEN_KEY \
+              ParameterKey=MerchantHosts,ParameterValue=$MERCHANT_HOSTS \
+              ParameterKey=StoreCoords,ParameterValue=$STORE_COORDS
+
+            REST_API=$(aws cloudformation describe-stacks --stack-name merchant-api --query "Stacks[0].Outputs")
+
+            REST_API_ID=(echo $REST_API_DATA | jq 'map(select(.OutputKey | contains("RestAPIID"))) | .[].OutputValue')
+            REST_API_URL=(echo $REST_API_DATA | jq 'map(select(.OutputKey | contains("RestAPIURL"))) | .[].OutputValue')
+            COGNITO_ID=(echo $REST_API_DATA | jq 'map(select(.OutputKey | contains("UserPoolID"))) | .[].OutputValue')
+
+            aws apigateway create-deployment --rest-api-id $REST_API_ID --stage-name prod
+
+            echo "REST_API_URL=$REST_API_URL" >> "$GITHUB_ENV"
+            echo "COGNITO_ID=$COGNITO_ID" >> "$GITHUB_ENV"
           fi
+      - name: user-init
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          COGNITO_ID: ${{ env.COGNITO_ID }}
+          MERCHANT_USER: ${{ env.MERCHANT_USER }}
+        run:
+          IFS=, read -r USERNAME EMAIL PASSWORD  <<< $MERCHANT_USER
+
+          aws cognito-idp admin-create-user \
+            --user-pool-id $COGNITO_ID \
+            --username $USERNAME \
+            --user-attributes Name=email,Value=$EMAIL \
+            Name=email_verified,Value=true --message-action SUPPRESS
+
+          aws cognito-idp admin-set-user-password \
+            --user-pool-id $COGNITO_ID \
+            --username $USERNAME \
+            --password $PASSWORD \
+            --permanent
+
       - name: webapp-init
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -35,5 +78,4 @@ jobs:
             echo "web app is running, no action"
           else
             echo "web app is not running, execute"
-            #exit 1
           fi

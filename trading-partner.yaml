@@ -565,3 +565,6 @@ Outputs:
   RestAPIURL:
     Description: Rest API URL
     Value: !Sub "https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/prod"
+  UserPoolID:
+    Description: Cognito user pool ID
+    Value: !GetAtt CognitoPool.UserPoolId

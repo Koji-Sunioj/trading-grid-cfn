@@ -8,6 +8,9 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
       - name: check restapi status
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           aws cloudformation describe-stacks --stack-name merchant-api --region eu-north-1 | jq length
           API_STATUS=$?
@@ -17,9 +20,12 @@ jobs:
             echo "execute deployment"
           else
             echo "app is running"
-            exit 1
+            #exit 1
           fi
       - name: check webapp status
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           aws cloudformation describe-stacks --stack-name merchant-webapp --region eu-north-1 | jq length
           WEBAPP_STATUS=$?
@@ -29,5 +35,5 @@ jobs:
             echo "execute deployment"
           else
             echo "web app is running"
-            exit 1
+            #exit 1
           fi

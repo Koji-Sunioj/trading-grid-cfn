@@ -48,13 +48,14 @@ jobs:
             echo ${#TOKEN_KEY}
             echo ${#MERCHANT_HOSTS}
             echo ${#STORE_COORDS}
+            ls -la
 
             aws cloudformation deploy --stack-name $MERCHANT_STACK \
               --template-file file://trading-partner.yaml --capabilities CAPABILITY_IAM \
               --region eu-north-1 --parameter-overrides \
-                TokenKey="$TOKEN_KEY" \
-                MerchantHosts="$MERCHANT_HOSTS" \
-                StoreCoords="$STORE_COORDS" --debug 
+              TokenKey="$TOKEN_KEY" \
+              MerchantHosts="$MERCHANT_HOSTS" \
+              StoreCoords="$STORE_COORDS" --debug 
 
             REST_API_ID=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK --query \
               "Stacks[0].Outputs[?OutputKey=='RestAPIID'].OutputValue" --output text)

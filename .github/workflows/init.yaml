@@ -13,7 +13,7 @@ jobs:
           API_STATUS=$? 
 
           aws cloudformation stacks --stack-name $WEBAPP_STACK--region eu-north-1 \
-            --no-cli-pagee 2>/dev/null
+            --no-cli-pager 2>/dev/null
           WEBAPP_STATUS=$?
           
           echo "WEBAPP_STATUS=$WEBAPP_STATUS" >> "$GITHUB_ENV"

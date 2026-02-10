@@ -7,8 +7,8 @@ jobs:
   initialize:
     runs-on: "ubuntu-latest"
     steps:
+      - uses: actions/checkout@latest
       - name: restapi-init
-        uses: actions/checkout@latest
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -41,9 +41,8 @@ jobs:
             aws apigateway create-deployment --rest-api-id $REST_API_ID --stage-name prod \
               --region eu-north-1
           fi
+      - uses: actions/checkout@latest
       - name: webapp-init
-        needs:
-        uses: actions/checkout@latest
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -93,4 +92,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         run: |
           gh secret set WEBAPP_STACK --repo Koji-Sunioj/trading-grid --body "$WEBAPP_STACK"
-          gh secret set MERCHANT_STACK --repo Koji-Sunioj/trading-grid --body "$MERCHANT_STACK" 
+          gh secret set MERCHANT_STACK --repo Koji-Sunioj/trading-grid --body "$MERCHANT_STACK"

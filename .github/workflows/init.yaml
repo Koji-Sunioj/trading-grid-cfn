@@ -72,11 +72,11 @@ jobs:
               --template-file react-cfn.yaml --capabilities CAPABILITY_IAM \
               --region eu-north-1
 
-            CLOUDFRONT_URL=$(aws cloudformation describe-stacks --stack-name $WEBAPP_STACK --query \
-              "Stacks[0].Outputs[?OutputKey=='CloudFrontURL'].OutputValue" \
-              --output text --region eu-north-1)             
+            #CLOUDFRONT_URL=$(aws cloudformation describe-stacks --stack-name $WEBAPP_STACK --query \
+            #  "Stacks[0].Outputs[?OutputKey=='CloudFrontURL'].OutputValue" \
+            #  --output text --region eu-north-1)             
             
-            echo "NEW_HOST=$CLOUDFRONT_URL" >> "$GITHUB_ENV"
+            #echo "NEW_HOST=$CLOUDFRONT_URL" >> "$GITHUB_ENV"
           fi
   clean-up:
     needs: initialize-webapp
@@ -85,7 +85,14 @@ jobs:
       - uses: actions/checkout@v6
       - name: update-accepted-hosts
         run: |
-          HOSTS="$MERCHANT_HOSTS\,$NEW_HOST"
+          CLOUDFRONT_URL=$(aws cloudformation describe-stacks --stack-name $WEBAPP_STACK --query \
+              "Stacks[0].Outputs[?OutputKey=='CloudFrontURL'].OutputValue" \
+              --output text --region eu-north-1)             
+              
+          echo $CLOUDFRONT_URL
+              
+          HOSTS="$MERCHANT_HOSTS\,$CLOUDFRONT_URL"
+
           aws cloudformation deploy --stack-name $MERCHANT_STACK \
             --template-file trading-partner.yaml --capabilities CAPABILITY_IAM \
             --region eu-north-1 --parameter-overrides \

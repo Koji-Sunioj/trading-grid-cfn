@@ -51,12 +51,12 @@ jobs:
               MerchantHosts=$MERCHANT_HOSTS \
               StoreCoords=$STORE_COORDS  
 
-            REST_API_ID=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK \
-              --query "Stacks[0].Outputs[?OutputKey=='RestAPIID'].OutputValue" \
-              --output text --region eu-north-1)
+            #REST_API_ID=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK \
+            #  --query "Stacks[0].Outputs[?OutputKey=='RestAPIID'].OutputValue" \
+            #  --output text --region eu-north-1)
 
-            aws apigateway create-deployment --rest-api-id $REST_API_ID --stage-name prod \
-              --region eu-north-1
+            #aws apigateway create-deployment --rest-api-id $REST_API_ID --stage-name prod \
+            # --region eu-north-1
           fi
   initialize-webapp:
     needs: initialize-rest-api
@@ -85,6 +85,13 @@ jobs:
       - uses: actions/checkout@v6
       - name: update-accepted-hosts
         run: |
+          REST_API_ID=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK \
+            --query "Stacks[0].Outputs[?OutputKey=='RestAPIID'].OutputValue" \
+            --output text --region eu-north-1)
+
+          aws apigateway create-deployment --rest-api-id $REST_API_ID --stage-name prod \
+            --region eu-north-1
+
           CLOUDFRONT_URL=$(aws cloudformation describe-stacks --stack-name $WEBAPP_STACK --query \
               "Stacks[0].Outputs[?OutputKey=='CloudFrontURL'].OutputValue" \
               --output text --region eu-north-1)             

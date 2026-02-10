@@ -22,18 +22,20 @@ jobs:
     #  MERCHANT_STACK: ${{ secrets.MERCHANT_STACK }}
     #  WEBAPP_STACK: ${{ secrets.WEBAPP_STACK }}
     steps:
-      run: |
-        set +e
-        aws cloudformation describe-stacks --stack-name $MERCHANT_STACK --region eu-north-1 \
-          --no-cli-pager 2>/dev/null
-        API_STATUS=$? 
+      - run: |
+          set +e
+          aws cloudformation describe-stacks --stack-name $MERCHANT_STACK --region eu-north-1 \
+            --no-cli-pager 2>/dev/null
+        
+          API_STATUS=$? 
+         
+          aws cloudformation describe stacks --stack-name $WEBAPP_STACK --region eu-north-1 \
+            --no-cli-pager 2>/dev/null
+          
+          WEBAPP_STATUS=$?
 
-        aws cloudformation describe stacks --stack-name $WEBAPP_STACK --region eu-north-1 \
-          --no-cli-pager 2>/dev/null
-        WEBAPP_STATUS=$?
-
-        echo "WEBAPP_STATUS=$WEBAPP_STATUS" >> "$GITHUB_ENV"
-        echo "API_STATUS=$API_STATUS" >> "$GITHUB_ENV"
+          echo "WEBAPP_STATUS=$WEBAPP_STATUS" >> "$GITHUB_ENV"
+          echo "API_STATUS=$API_STATUS" >> "$GITHUB_ENV"
   initialize-rest-api:
     needs: check-status
     runs-on: "ubuntu-latest"
@@ -47,8 +49,8 @@ jobs:
     #  WEBAPP_STACK: ${{ secrets.WEBAPP_STACK }}
     steps:
       - uses: actions/checkout@v6
-      - name: initiate
-        run: |
+        #- name: initiate
+      - run: |
           if [[ $API_STATUS == 0 ]]
           then
             echo "rest api running, no action"

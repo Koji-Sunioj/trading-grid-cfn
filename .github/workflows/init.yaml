@@ -9,7 +9,7 @@ jobs:
     steps:
       - env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}:
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           MERCHANT_STACK: ${{ secrets.MERCHANT_STACK }}
           WEBAPP_STACK: ${{ secrets.WEBAPP_STACK }}
         run: |

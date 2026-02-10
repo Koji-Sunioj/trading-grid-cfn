@@ -49,7 +49,7 @@ jobs:
               --parameters \
                 ParameterKey=TokenKey,ParameterValue=$TOKEN_KEY \
                 ParameterKey=MerchantHosts,ParameterValue=$MERCHANT_HOSTS \
-                ParameterKey=StoreCoords,ParameterValue=$STORE_COORDS
+                ParameterKey=StoreCoords,ParameterValue="$STORE_COORDS"
 
             REST_API_ID=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK --query \
               "Stacks[0].Outputs[?OutputKey=='RestAPIID'].OutputValue" --output text)

@@ -7,7 +7,9 @@ jobs:
   check-status:
     runs-on: "ubuntu-latest"
     steps:
-      - env:
+      - env
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}:
           MERCHANT_STACK: ${{ secrets.MERCHANT_STACK }}
           WEBAPP_STACK: ${{ secrets.WEBAPP_STACK }}
         run: |
@@ -49,7 +51,7 @@ jobs:
               --parameters \
                 ParameterKey=TokenKey,ParameterValue=$TOKEN_KEY \
                 ParameterKey=MerchantHosts,ParameterValue=$MERCHANT_HOSTS \
-                ParameterKey=StoreCoords,ParameterValue="$STORE_COORDS"
+                ParameterKey=StoreCoords,ParameterValue="$STORE_COORDS" --debug 
 
             REST_API_ID=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK --query \
               "Stacks[0].Outputs[?OutputKey=='RestAPIID'].OutputValue" --output text)

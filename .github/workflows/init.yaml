@@ -7,6 +7,9 @@ jobs:
   check-status:
     runs-on: "ubuntu-latest"
     steps:
+      env:
+          MERCHANT_STACK: ${{ secrets.MERCHANT_STACK }}
+          WEBAPP_STACK: ${{ secrets.WEBAPP_STACK }}
       - run: |
           aws cloudformation describe-stacks --stack-name $MERCHANT_STACK --region eu-north-1 \
             --no-cli-pager 2>/dev/null

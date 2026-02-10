@@ -52,11 +52,11 @@ jobs:
               StoreCoords=$STORE_COORDS  
 
             #REST_API_ID=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK \
-            #  --query "Stacks[0].Outputs[?OutputKey=='RestAPIID'].OutputValue" \
-            #  --output text --region eu-north-1)
+            #--query "Stacks[0].Outputs[?OutputKey=='RestAPIID'].OutputValue" \
+            #--output text --region eu-north-1)
 
             #aws apigateway create-deployment --rest-api-id $REST_API_ID --stage-name prod \
-            # --region eu-north-1
+            #--region eu-north-1
           fi
   initialize-webapp:
     needs: initialize-rest-api
@@ -82,15 +82,29 @@ jobs:
     needs: initialize-webapp
     runs-on: "ubuntu-latest"
     steps:
-      - name: deploy-api 
+      - uses: actions/checkout@v6
+      - name: update-accepted-hosts
         run: |
           REST_API_ID=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK \
             --query "Stacks[0].Outputs[?OutputKey=='RestAPIID'].OutputValue" \
             --output text --region eu-north-1)
 
           aws apigateway create-deployment --rest-api-id $REST_API_ID --stage-name prod \
-            --region eu-north-1
+              --region eu-north-1
+          CLOUDFRONT_URL=$(aws cloudformation describe-stacks --stack-name $WEBAPP_STACK --query \
+              "Stacks[0].Outputs[?OutputKey=='CloudFrontURL'].OutputValue" \
+              --output text --region eu-north-1)             
+              
+          echo $CLOUDFRONT_URL
+              
+          HOSTS="$MERCHANT_HOSTS\,$CLOUDFRONT_URL"
 
+          aws cloudformation deploy --stack-name $MERCHANT_STACK \
+            --template-file trading-partner.yaml --capabilities CAPABILITY_IAM \
+            --region eu-north-1 --parameter-overrides \
+              TokenKey=$TOKEN_KEY \
+              MerchantHosts=$HOSTS \
+              StoreCoords=$STORE_COORDS --debug
       - name: update-client-secret
         run: |
           gh secret set WEBAPP_STACK --repo Koji-Sunioj/trading-grid --body "$WEBAPP_STACK"

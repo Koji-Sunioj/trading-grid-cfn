@@ -44,21 +44,16 @@ jobs:
           else
             echo "rest api is not running, execute"
 
-            echo ${#MERCHANT_STACK}
-            echo ${#TOKEN_KEY}
-            echo ${#MERCHANT_HOSTS}
-            echo ${#STORE_COORDS}
-            ls -la
-
             aws cloudformation deploy --stack-name $MERCHANT_STACK \
               --template-file trading-partner.yaml --capabilities CAPABILITY_IAM \
               --region eu-north-1 --parameter-overrides \
-              TokenKey="$TOKEN_KEY" \
-              MerchantHosts="$MERCHANT_HOSTS" \
-              StoreCoords="$STORE_COORDS" --debug 
+              TokenKey=$TOKEN_KEY \
+              MerchantHosts=$MERCHANT_HOSTS \
+              StoreCoords=$STORE_COORDS  
 
-            REST_API_ID=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK --query \
-              "Stacks[0].Outputs[?OutputKey=='RestAPIID'].OutputValue" --output text)
+            REST_API_ID=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK \
+              --query "Stacks[0].Outputs[?OutputKey=='RestAPIID'].OutputValue" \
+              --output text --region eu-north-1)
 
             aws apigateway create-deployment --rest-api-id $REST_API_ID --stage-name prod \
               --region eu-north-1
@@ -75,11 +70,12 @@ jobs:
             echo "web app is running, no action"
           else  
             aws cloudformation deploy --stack-name $WEBAPP_STACK \
-              --template-file file://react-cfn.yaml --capabilities CAPABILITY_IAM \
+              --template-file react-cfn.yaml --capabilities CAPABILITY_IAM \
               --region eu-north-1
 
             CLOUDFRONT_URL=$(aws cloudformation describe-stacks --stack-name $WEBAPP_STACK --query \
-              "Stacks[0].Outputs[?OutputKey=='CloudFrontURL'].OutputValue" --output text)             
+              "Stacks[0].Outputs[?OutputKey=='CloudFrontURL'].OutputValue" \
+              --output text --region eu-north-1)             
             
             echo "NEW_HOST=$CLOUDFRONT_URL" >> "$GITHUB_ENV"
           fi
@@ -94,11 +90,11 @@ jobs:
         run: |
           HOSTS="$MERCHANT_HOSTS\,$NEW_HOST"
           aws cloudformation deploy --stack-name $MERCHANT_STACK \
-            --template-file file://trading-partner.yaml --capabilities CAPABILITY_IAM \
+            --template-file trading-partner.yaml --capabilities CAPABILITY_IAM \
             --region eu-north-1 --parameter-overrides \
               TokenKey=$TOKEN_KEY \
-              MerchantHosts="HOSTS" \
-              StoreCoords="$STORE_COORDS" --debug
+              MerchantHosts=HOSTS \
+              StoreCoords=$STORE_COORDS --debug
       - name: update-client-secret
         env:
           MERCHANT_STACK: ${{ secrets.MERCHANT_STACK }}

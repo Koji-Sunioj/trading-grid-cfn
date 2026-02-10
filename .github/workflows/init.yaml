@@ -16,11 +16,6 @@ env:
 jobs:
   check-status:
     runs-on: "ubuntu-latest"
-    #env:
-    #  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #  MERCHANT_STACK: ${{ secrets.MERCHANT_STACK }}
-    #  WEBAPP_STACK: ${{ secrets.WEBAPP_STACK }}
     steps:
       - run: |
           set +e
@@ -39,14 +34,6 @@ jobs:
   initialize-rest-api:
     needs: check-status
     runs-on: "ubuntu-latest"
-    #env:
-    # AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #  TOKEN_KEY: ${{ secrets.DISTANCE_API_KEY }}
-    #  STORE_COORDS: ${{ secrets.MERCHANT_COORDS }}
-    #  MERCHANT_HOSTS: ${{ secrets.ACCEPTED_ORIGINS }}
-    #  MERCHANT_STACK: ${{ secrets.MERCHANT_STACK }}
-    #  WEBAPP_STACK: ${{ secrets.WEBAPP_STACK }}
     steps:
       - uses: actions/checkout@v6
         #- name: initiate
@@ -76,11 +63,6 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
       - uses: actions/checkout@v6
-        #- name: webapp-init
-        #env:
-        #  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        #  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        #  WEBAPP_STACK: ${{ secrets.WEBAPP_STACK }}
       - run: |
           if [[ $WEBAPP_STATUS == 0 ]]
           then
@@ -102,13 +84,6 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: update-accepted-hosts
-        #env:
-        #  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}yy
-        #  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        #  TOKEN_KEY: ${{ secrets.DISTANCE_API_KEY }}
-        #  STORE_COORDS: ${{ secrets.MERCHANT_COORDS }}
-        #  MERCHANT_HOSTS: ${{ secrets.ACCEPTED_ORIGINS }}
-        #  MERCHANT_STACK: ${{ secrets.MERCHANT_STACK }}
         run: |
           HOSTS="$MERCHANT_HOSTS\,$NEW_HOST"
           aws cloudformation deploy --stack-name $MERCHANT_STACK \
@@ -118,10 +93,6 @@ jobs:
               MerchantHosts=$HOSTS \
               StoreCoords=$STORE_COORDS --debug
       - name: update-client-secret
-        #env:
-        #  MERCHANT_STACK: ${{ secrets.MERCHANT_STACK }}
-        #  WEBAPP_STACK: ${{ secrets.WEBAPP_STACK }}
-        #  GITHUB_TOKEN: ${{ secrets.TOKEN }}
         run: |
           gh secret set WEBAPP_STACK --repo Koji-Sunioj/trading-grid --body "$WEBAPP_STACK"
           gh secret set MERCHANT_STACK --repo Koji-Sunioj/trading-grid --body "$MERCHANT_STACK"

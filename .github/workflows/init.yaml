@@ -89,7 +89,7 @@ jobs:
           CREATED_STACKS=$(aws cloudformation describe-stacks --query "Stacks[?StackName=='test-lambda'||StackName=='sockets']" \
             --no-cli-pager | jq length)
 
-          if [[ $CREATED_STACKS == 2]]
+          if [[ $CREATED_STACKS == 2 ]]
           then
             REST_API_ID=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK \
               --query "Stacks[0].Outputs[?OutputKey=='RestAPIID'].OutputValue" \

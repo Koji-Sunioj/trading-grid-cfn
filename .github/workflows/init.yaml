@@ -85,28 +85,36 @@ jobs:
       - uses: actions/checkout@v6
       - name: update-accepted-hosts
         run: |
-          REST_API_ID=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK \
-            --query "Stacks[0].Outputs[?OutputKey=='RestAPIID'].OutputValue" \
-            --output text --region eu-north-1)
 
-          aws apigateway create-deployment --rest-api-id $REST_API_ID --stage-name prod \
-            --region eu-north-1
+          CREATED_STACKS=$(aws cloudformation describe-stacks --query "Stacks[?StackName=='test-lambda'||StackName=='sockets']" \
+            --no-cli-pager | jq length)
 
-          CLOUDFRONT_URL=$(aws cloudformation describe-stacks --stack-name $WEBAPP_STACK --query \
-            "Stacks[0].Outputs[?OutputKey=='CloudFrontURL'].OutputValue" \
-            --output text --region eu-north-1)             
+          if [[ $CREATED_STACKS == 2]]
+          then
+            REST_API_ID=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK \
+              --query "Stacks[0].Outputs[?OutputKey=='RestAPIID'].OutputValue" \
+              --output text --region eu-north-1)
+
+            aws apigateway create-deployment --rest-api-id $REST_API_ID --stage-name prod \
+              --region eu-north-1
+
+            CLOUDFRONT_URL=$(aws cloudformation describe-stacks --stack-name $WEBAPP_STACK --query \
+              "Stacks[0].Outputs[?OutputKey=='CloudFrontURL'].OutputValue" \
+              --output text --region eu-north-1)             
               
-          echo $CLOUDFRONT_URL
+            echo $CLOUDFRONT_URL
               
-          HOSTS="$MERCHANT_HOSTS\,$CLOUDFRONT_URL"
+            HOSTS="$MERCHANT_HOSTS\,$CLOUDFRONT_URL"
 
-          aws cloudformation deploy --stack-name $MERCHANT_STACK \
-            --template-file trading-partner.yaml --capabilities CAPABILITY_IAM \
-            --region eu-north-1 --parameter-overrides \
-              TokenKey=$TOKEN_KEY \
-              MerchantHosts=$HOSTS \
+            aws cloudformation deploy --stack-name $MERCHANT_STACK \
+              --template-file trading-partner.yaml --capabilities CAPABILITY_IAM \
+              --region eu-north-1 --parameter-overrides \
+                TokenKey=$TOKEN_KEY \
+                MerchantHosts=$HOSTS \
               StoreCoords=$STORE_COORDS --debug
-
+          else
+            exit 1
+          fi
       - name: update-client-secret
         run: |
           REST_API_ID=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK \

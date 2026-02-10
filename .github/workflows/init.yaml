@@ -36,14 +36,14 @@ jobs:
           MERCHANT_HOSTS: ${{ secrets.ACCEPTED_ORIGINS }}
           MERCHANT_STACK: ${{ secrets.MERCHANT_STACK }}
         run: |
-          if [[ $API_STATUS == "0" ]]
+          if [[ $API_STATUS == 0 ]]
           then
             echo "rest api running, no action"
           else
             echo "rest api is not running, execute"
 
             aws cloudformation deploy --stack-name $MERCHANT_STACK \
-              --template-body file://trading-partner.yaml \
+              --template-file file://trading-partner.yaml \
               --capabilities CAPABILITY_IAM \
               --region eu-north-1
               --parameters \
@@ -69,7 +69,7 @@ jobs:
             echo "web app is running, no action"
           else  
             aws cloudformation deploy --stack-name $WEBAPP_STACK \
-              --template-body file://react-cfn.yaml \
+              --template-file file://react-cfn.yaml \
               --capabilities CAPABILITY_IAM \
               --region eu-north-1
 

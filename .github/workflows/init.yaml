@@ -15,7 +15,7 @@ jobs:
             --no-cli-pager 2>/dev/null
           API_STATUS=$? 
 
-          aws cloudformation stacks --stack-name $WEBAPP_STACK--region eu-north-1 \
+          aws cloudformation describe stacks --stack-name $WEBAPP_STACK--region eu-north-1 \
             --no-cli-pager 2>/dev/null
           WEBAPP_STATUS=$?
           

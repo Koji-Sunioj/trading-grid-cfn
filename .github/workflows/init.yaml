@@ -4,7 +4,22 @@ on:
   workflow_dispatch:
 
 jobs:
+  check-status:
+    runs-on: "ubuntu-latest"
+    steps:
+      - run: |
+          aws cloudformation describe-stacks --stack-name $MERCHANT_STACK --region eu-north-1 \
+            --no-cli-pager 2>/dev/null
+          API_STATUS=$? 
+
+          aws cloudformation stacks --stack-name $WEBAPP_STACK--region eu-north-1 \
+            --no-cli-pagee 2>/dev/null
+          WEBAPP_STATUS=$?
+          
+          echo "WEBAPP_STATUS=$WEBAPP_STATUS" >> "$GITHUB_ENV"
+          echo "API_STATUS=$API_STATUS" >> "$GITHUB_ENV"
   initialize:
+    needs: check-status
     runs-on: "ubuntu-latest"
     steps:
       - uses: actions/checkout@v6
@@ -17,10 +32,7 @@ jobs:
           MERCHANT_HOSTS: ${{ secrets.ACCEPTED_ORIGINS }}
           MERCHANT_STACK: ${{ secrets.MERCHANT_STACK }}
         run: |
-          aws cloudformation describe-stacks --stack-name $MERCHANT_STACK --region eu-north-1 | jq length
-          API_STATUS=$?
-
-          if [[ $API_STATUS == 1 ]]
+          if [[ $API_STATUS == "0" ]]
           then
             echo "rest api running, no action"
           else
@@ -35,7 +47,7 @@ jobs:
                 ParameterKey=MerchantHosts,ParameterValue=$MERCHANT_HOSTS \
                 ParameterKey=StoreCoords,ParameterValue=$STORE_COORDS
 
-            REST_API_ID=$(aws cloudformation describe-stacks --stack-name test-lambda --query \
+            REST_API_ID=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK --query \
               "Stacks[0].Outputs[?OutputKey=='RestAPIID'].OutputValue" --output text)
 
             aws apigateway create-deployment --rest-api-id $REST_API_ID --stage-name prod \
@@ -48,10 +60,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           WEBAPP_STACK: ${{ secrets.WEBAPP_STACK }}
         run: |
-          aws cloudformation describe-stacks --stack-name $WEBAPP_STACK--region eu-north-1 | jq length
-          WEBAPP_STATUS=$?
-
-          if [[ $WEBAPP_STATUS == 1 ]]
+          if [[ $WEBAPP_STATUS == 0 ]]
           then
             echo "web app is running, no action"
           else  

@@ -24,12 +24,11 @@ jobs:
 
           echo "WEBAPP_STATUS=$WEBAPP_STATUS" >> "$GITHUB_ENV"
           echo "API_STATUS=$API_STATUS" >> "$GITHUB_ENV"
-  initialize:
+  initialize-rest-api:
     needs: check-status
     runs-on: "ubuntu-latest"
     steps:
       - uses: actions/checkout@v6
-      - name: restapi-init
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -58,6 +57,10 @@ jobs:
             aws apigateway create-deployment --rest-api-id $REST_API_ID --stage-name prod \
               --region eu-north-1
           fi
+  initialize-webapp:
+    needs: initialize-rest-api
+    runs-on: "ubuntu-latest"
+    steps:
       - name: webapp-init
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -78,6 +81,10 @@ jobs:
             
             echo "NEW_HOST=$CLOUDFRONT_URL" >> "$GITHUB_ENV"
           fi
+  clean-up:
+    needs: initialize-webapp
+    runs-on: "ubuntu-latest"
+    steps:
       - name: update-accepted-hosts
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}yy
@@ -88,8 +95,6 @@ jobs:
           MERCHANT_STACK: ${{ secrets.MERCHANT_STACK }}
         run: |
           HOSTS="$MERCHANT_HOSTS\,$NEW_HOST"
-          echo ${#HOSTS} 
-          echo $NEW_HOST 
           aws cloudformation deploy --stack-name $MERCHANT_STACK \
             --template-file trading-partner.yaml --capabilities CAPABILITY_IAM \
             --region eu-north-1 --parameter-overrides \

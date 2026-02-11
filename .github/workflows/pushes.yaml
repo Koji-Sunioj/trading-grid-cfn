@@ -1,0 +1,100 @@
+name: initiate-apps
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main:
+
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  TOKEN_KEY: ${{ secrets.DISTANCE_API_KEY }}
+  STORE_COORDS: ${{ secrets.MERCHANT_COORDS }}
+  MERCHANT_HOSTS: ${{ secrets.ACCEPTED_ORIGINS }}
+  MERCHANT_STACK: ${{ secrets.MERCHANT_STACK }}
+  WEBAPP_STACK: ${{ secrets.WEBAPP_STACK }}
+  GITHUB_TOKEN: ${{ secrets.TOKEN }}
+
+jobs:
+  deploy-rest-api:
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v6
+      - run: |
+          aws cloudformation deploy --stack-name $MERCHANT_STACK \
+            --template-file trading-partner.yaml --capabilities CAPABILITY_IAM \
+            --region eu-north-1 --parameter-overrides \
+            TokenKey=$TOKEN_KEY \
+            MerchantHosts=$MERCHANT_HOSTS \
+            StoreCoords=$STORE_COORDS
+  deploy-webapp:
+    needs: deploy-rest-api
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v6
+      - run: |
+          aws cloudformation deploy --stack-name $WEBAPP_STACK \
+            --template-file react-cfn.yaml --capabilities CAPABILITY_IAM \
+            --region eu-north-1
+  clean-up:
+    needs: deploy-webapp 
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v6
+      - name: update-api-gateway
+        run: |
+          CREATED_STACKS=$(aws cloudformation describe-stacks --query "Stacks[?StackName=='$WEBAPP_STACK'||StackName=='$MERCHANT_STACK']" \
+            --region eu-north-1 --no-cli-pager | jq length)
+          
+          echo $CREATED_STACKS
+
+          if [[ $CREATED_STACKS == 2 ]]
+          then
+            REST_API_ID=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK \
+              --query "Stacks[0].Outputs[?OutputKey=='RestAPIID'].OutputValue" \
+              --output text --region eu-north-1)
+
+            aws apigateway create-deployment --rest-api-id $REST_API_ID --stage-name prod \
+              --region eu-north-1
+
+            CLOUDFRONT_URL=$(aws cloudformation describe-stacks --stack-name $WEBAPP_STACK --query \
+              "Stacks[0].Outputs[?OutputKey=='CloudFrontURL'].OutputValue" \
+              --output text --region eu-north-1)             
+              
+            echo $CLOUDFRONT_URL
+              
+            HOSTS="$MERCHANT_HOSTS\,$CLOUDFRONT_URL"
+
+            aws cloudformation deploy --stack-name $MERCHANT_STACK \
+              --template-file trading-partner.yaml --capabilities CAPABILITY_IAM \
+              --region eu-north-1 --parameter-overrides \
+                TokenKey=$TOKEN_KEY \
+                MerchantHosts=$HOSTS \
+              StoreCoords=$STORE_COORDS --debug
+          else
+            echo "both required stacks do not exist"
+            exit 1
+          fi
+      - name: update-client-secret
+        run: |
+          REST_API_ID=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK \
+            --query "Stacks[0].Outputs[?OutputKey=='RestAPIID'].OutputValue" \
+            --output text --region eu-north-1)
+
+          REST_API_URL=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK \
+            --query "Stacks[0].Outputs[?OutputKey=='RestAPIURL'].OutputValue" \
+            --output text --region eu-north-1)
+
+          S3_BUCKET=$(aws cloudformation describe-stacks --stack-name $WEBAPP_STACK --query \
+            "Stacks[0].Outputs[?OutputKey=='WebAppBucket'].OutputValue" \
+            --output text --region eu-north-1)
+
+          echo $REST_API_ID
+          echo $REST_API_URL
+          echo $S3_BUCKET
+
+
+          gh secret set REST_API_URL --repo Koji-Sunioj/trading-grid --body "$REST_API_URL"
+          gh secret set S3_BUCKET --repo Koji-Sunioj/trading-grid --body "$S3_BUCKET"
+          gh secret set REST_API_ID --repo Koji-Sunioj/trading-grid --body "$REST_API_ID"

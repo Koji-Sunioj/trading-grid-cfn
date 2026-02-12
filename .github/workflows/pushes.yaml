@@ -62,6 +62,8 @@ jobs:
               --output text --region eu-north-1)             
               
             echo $CLOUDFRONT_URL
+
+            echo $MERCHANT_PARAMS | jq length
             
             aws cloudformation deploy --stack-name $MERCHANT_STACK \
               --template-file trading-partner.yaml --capabilities CAPABILITY_IAM \

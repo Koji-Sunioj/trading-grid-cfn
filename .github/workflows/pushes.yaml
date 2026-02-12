@@ -70,7 +70,7 @@ jobs:
             aws cloudformation deploy --stack-name $MERCHANT_STACK \
               --template-file trading-partner.yaml --capabilities CAPABILITY_IAM \
               --region eu-north-1 --parameter-overrides \
-              MerchantParams=$PARAMS_W_PROD_SERVER
+              MerchantParams="${PARAMS_W_PROD_SERVER:1:-1}"
           else
             echo "both required stacks do not exist"
             exit 1

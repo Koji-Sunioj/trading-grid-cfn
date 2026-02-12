@@ -1,13 +1,4 @@
 Parameters:
-  TokenKey:
-    Description: key for generating jwt tokens to client
-    Type: String
-  StoreCoords:
-    Description: coordinates of merchant warehouse
-    Type: String
-  MerchantHosts:
-    Description: accepted hosts for cross origin requests
-    Type: String
   MerchantParams:
     Description: parameters for lambda functions
     Type: String
@@ -161,8 +152,7 @@ Resources:
       Role: !GetAtt LambdaRole.Arn
       Environment:
         Variables:
-          MERCHANT_PARAMS: !Ref MerchantParams 
-          ACCEPTED_ORIGINS: !Ref MerchantHosts
+          MERCHANT_PARAMS: !Ref MerchantParams
       Code:
         S3Bucket: black-metal-666
         S3Key: functions.zip
@@ -188,9 +178,7 @@ Resources:
       Role: !GetAtt LambdaRole.Arn
       Environment:
         Variables:
-          MERCHANT_PARAMS: !Ref MerchantParams 
-          TOKEN_KEY: !Ref TokenKey
-          STORE_COORDS: !Ref StoreCoords
+          MERCHANT_PARAMS: !Ref MerchantParams
           PO_TABLE: !Ref PurchaseOrdersTable
           ROUTING_TABLE: !Ref ClientRoutingTable
           DISPATCH_TABLE: !Ref ShipmentOrdersTable
@@ -209,9 +197,7 @@ Resources:
       Role: !GetAtt LambdaRole.Arn
       Environment:
         Variables:
-          MERCHANT_PARAMS: !Ref MerchantParams 
-          TOKEN_KEY: !Ref TokenKey
-          STORE_COORDS: !Ref StoreCoords
+          MERCHANT_PARAMS: !Ref MerchantParams
           PO_TABLE: !Ref PurchaseOrdersTable
           ROUTING_TABLE: !Ref ClientRoutingTable
           DISPATCH_TABLE: !Ref ShipmentOrdersTable

@@ -9,9 +9,9 @@ on:
 env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  TOKEN_KEY: ${{ secrets.DISTANCE_API_KEY }}
-  STORE_COORDS: ${{ secrets.MERCHANT_COORDS }}
-  MERCHANT_HOSTS: ${{ secrets.ACCEPTED_ORIGINS }}
+  #TOKEN_KEY: ${{ secrets.DISTANCE_API_KEY }}
+  #STORE_COORDS: ${{ secrets.MERCHANT_COORDS }}
+  #MERCHANT_HOSTS: ${{ secrets.ACCEPTED_ORIGINS }}
   MERCHANT_STACK: ${{ secrets.MERCHANT_STACK }}
   WEBAPP_STACK: ${{ secrets.WEBAPP_STACK }}
   GITHUB_TOKEN: ${{ secrets.TOKEN }}

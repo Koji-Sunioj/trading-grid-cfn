@@ -63,12 +63,14 @@ jobs:
               
             echo $CLOUDFRONT_URL
 
-            echo $MERCHANT_PARAMS | jq length
+            #echo $MERCHANT_PARAMS | jq length
+            PARAMS_W_PROD_SERVER=$(echo $MERCHANT_PARAMS | jq -c --arg url "https://$CLOUDFRONT_URL"  '.["prod-server"] = $url' | jq -R)
+            #echo $MERCHANT_PARAMS | jq --arg url "https://$CLOUDFRONT_URL"  '.["prod-server"] = $url'
             
             aws cloudformation deploy --stack-name $MERCHANT_STACK \
               --template-file trading-partner.yaml --capabilities CAPABILITY_IAM \
               --region eu-north-1 --parameter-overrides \
-              MerchantParams=$MERCHANT_PARAMS
+              MerchantParams=$PARAMS_W_PROD_SERVER
           else
             echo "both required stacks do not exist"
             exit 1

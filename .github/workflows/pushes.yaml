@@ -64,7 +64,7 @@ jobs:
             echo $CLOUDFRONT_URL
 
             #echo $MERCHANT_PARAMS | jq length
-            PARAMS_W_PROD_SERVER=$(echo $MERCHANT_PARAMS | jq -c --arg url "https://$CLOUDFRONT_URL"  '.["prod-server"] = $url' | jq -R)
+            PARAMS_W_PROD_SERVER=$(echo $MERCHANT_PARAMS | jq -c --arg url "https://$CLOUDFRONT_URL"  '.["prod-server"] = $url' | jq -R | sed 's/\\//g')
             #echo $MERCHANT_PARAMS | jq --arg url "https://$CLOUDFRONT_URL"  '.["prod-server"] = $url'
             
             aws cloudformation deploy --stack-name $MERCHANT_STACK \

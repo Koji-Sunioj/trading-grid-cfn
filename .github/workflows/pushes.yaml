@@ -15,6 +15,7 @@ env:
   MERCHANT_STACK: ${{ secrets.MERCHANT_STACK }}
   WEBAPP_STACK: ${{ secrets.WEBAPP_STACK }}
   GITHUB_TOKEN: ${{ secrets.TOKEN }}
+  MERCHANT_PARAMS: ${{ secrets.MERCHANT_PARAMS }}
 
 jobs:
   deploy-rest-api:
@@ -25,9 +26,7 @@ jobs:
           aws cloudformation deploy --stack-name $MERCHANT_STACK \
             --template-file trading-partner.yaml --capabilities CAPABILITY_IAM \
             --region eu-north-1 --parameter-overrides \
-            TokenKey=$TOKEN_KEY \
-            MerchantHosts=$MERCHANT_HOSTS \
-            StoreCoords=$STORE_COORDS
+            MerchantParams=$MERCHANT_PARAMS \
   deploy-webapp:
     needs: deploy-rest-api
     runs-on: "ubuntu-latest"
@@ -63,25 +62,18 @@ jobs:
               --output text --region eu-north-1)             
               
             echo $CLOUDFRONT_URL
-              
-            HOSTS="$MERCHANT_HOSTS\,$CLOUDFRONT_URL"
+            echo $MERCHANT_PARAMS
 
             aws cloudformation deploy --stack-name $MERCHANT_STACK \
               --template-file trading-partner.yaml --capabilities CAPABILITY_IAM \
               --region eu-north-1 --parameter-overrides \
-                TokenKey=$TOKEN_KEY \
-                MerchantHosts=$HOSTS \
-              StoreCoords=$STORE_COORDS --debug
+                MerchantParams=$MERCHANT_PARAMS \
           else
             echo "both required stacks do not exist"
             exit 1
           fi
       - name: update-client-secret
         run: |
-          REST_API_ID=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK \
-            --query "Stacks[0].Outputs[?OutputKey=='RestAPIID'].OutputValue" \
-            --output text --region eu-north-1)
-
           REST_API_URL=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK \
             --query "Stacks[0].Outputs[?OutputKey=='RestAPIURL'].OutputValue" \
             --output text --region eu-north-1)
@@ -90,11 +82,8 @@ jobs:
             "Stacks[0].Outputs[?OutputKey=='WebAppBucket'].OutputValue" \
             --output text --region eu-north-1)
 
-          echo $REST_API_ID
           echo $REST_API_URL
           echo $S3_BUCKET
 
-
           gh secret set REST_API_URL --repo Koji-Sunioj/trading-grid --body "$REST_API_URL"
           gh secret set S3_BUCKET --repo Koji-Sunioj/trading-grid --body "$S3_BUCKET"
-          gh secret set REST_API_ID --repo Koji-Sunioj/trading-grid --body "$REST_API_ID"

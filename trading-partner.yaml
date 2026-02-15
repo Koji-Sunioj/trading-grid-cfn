@@ -190,10 +190,6 @@ Resources:
       Timeout: 60
       Layers:
         - !Ref ERPLayer
-  LambdaBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub "${AWS::StackName}-${AWS::Region}"
   ClientERPFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -207,8 +203,7 @@ Resources:
           DISPATCH_TABLE: !Ref ShipmentOrdersTable
           PO_AMMENDMENT_TABLE: !Ref PurchaseOrdersAmmendmentsTable
       Code:
-        S3Bucket: !Ref 
-        #S3Bucket: black-metal-666
+        S3Bucket: black-metal-666
         S3Key: functions.zip
       Runtime: python3.10
       Timeout: 60

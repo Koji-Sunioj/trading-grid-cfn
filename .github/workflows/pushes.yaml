@@ -71,13 +71,18 @@ jobs:
           fi
       - name: update-client-secret
         run: |
-          REST_API_URL=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK \
-            --query "Stacks[0].Outputs[?OutputKey=='RestAPIURL'].OutputValue" \
-            --output text --region eu-north-1)
-
-          S3_BUCKET=$(aws cloudformation describe-stacks --stack-name $WEBAPP_STACK --query \
+          #REST_API_URL=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK \
+          #  --query "Stacks[0].Outputs[?OutputKey=='RestAPIURL'].OutputValue" \
+          #  --output text --region eu-north-1)
+          MERCHANT_STACK_OUTPUTS=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK --query "Stacks[0].Outputs")
+          LAMBDAS=$(echo $MERCHANT_STACK_OUTPUTS | jq -r '.[] |  select(.OutputKey=="Lambdas").OutputValue')
+          REST_API_URL=$(echo $MERCHANT_STACK_OUTPUTS | jq -r '.[] |  select(.OutputKey=="RestAPIURL").OutputValue')
+ 
+          WEBAPP_BUCKET=$(aws cloudformation describe-stacks --stack-name $WEBAPP_STACK --query \
             "Stacks[0].Outputs[?OutputKey=='WebAppBucket'].OutputValue" \
             --output text --region eu-north-1)
 
+          gh secret set LAMBDAS --repo Koji-Sunioj/trading-grid --body "$LAMBDAS"
           gh secret set REST_API_URL --repo Koji-Sunioj/trading-grid --body "$REST_API_URL"
-          gh secret set S3_BUCKET --repo Koji-Sunioj/trading-grid --body "$S3_BUCKET"
+          gh secret set WEBAPP_BUCKET --repo Koji-Sunioj/trading-grid --body "$WEBAPP_BUCKET"
+

@@ -560,3 +560,6 @@ Outputs:
   UserPoolID:
     Description: Cognito user pool ID
     Value: !GetAtt CognitoPool.UserPoolId
+  Lambdas:
+    Description: List of lambda function names with comma delimiter
+    Value: !Sub "${CORSFunction},${AuthFunction},${MerchantERPFunction},${ClientERPFunction},${UTILSFunction"

@@ -74,7 +74,9 @@ jobs:
           #REST_API_URL=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK \
           #  --query "Stacks[0].Outputs[?OutputKey=='RestAPIURL'].OutputValue" \
           #  --output text --region eu-north-1)
-          MERCHANT_STACK_OUTPUTS=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK --query "Stacks[0].Outputs")
+          MERCHANT_STACK_OUTPUTS=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK --region eu-north-1 \
+            --query "Stacks[0].Outputs")
+
           LAMBDAS=$(echo $MERCHANT_STACK_OUTPUTS | jq -r '.[] |  select(.OutputKey=="Lambdas").OutputValue')
           REST_API_URL=$(echo $MERCHANT_STACK_OUTPUTS | jq -r '.[] |  select(.OutputKey=="RestAPIURL").OutputValue')
  

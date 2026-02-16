@@ -74,20 +74,26 @@ jobs:
           gh secret set WEBAPP_BUCKET --repo Koji-Sunioj/trading-grid --body "$WEBAPP_BUCKET"
       - name: create-cognito-user
         run: | 
+          IFS=, read -r USERNAME EMAIL PASSWORD  <<< $MERCHANT_USER
+
           USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name --region eu-north-1 \
             $MERCHANT_STACK --query "Stacks[0].Outputs[?OutputKey=='UserPoolID'].OutputValue" --output text)
 
-          IFS=, read -r USERNAME EMAIL PASSWORD  <<< $MERCHANT_USER
+          USERS=$(aws cognito-idp list-users --user-pool-id $USER_POOL_ID --query "Users" --region eu-north-1)
 
-          aws cognito-idp admin-create-user --region eu-north-1 \
-            --user-pool-id $USER_POOL_ID \
-            --username $USERNAME \
-            --user-attributes Name=email,Value=$EMAIL \
-            Name=email_verified,Value=true --message-action SUPPRESS
+          USER_EXISTS=$(echo $USERS | jq --arg user $USERNAME '[.[].Username] | index($user)')
 
-          aws cognito-idp admin-set-user-password --region eu-north-1 \
-            --user-pool-id $USER_POOL_ID \
-            --username $USERNAME \
-            --password $PASSWORD \
-            --permanent
+          if [[ $USER_EXISTS != 0 ]]
+          then    
+            aws cognito-idp admin-create-user --region eu-north-1 \
+              --user-pool-id $USER_POOL_ID \
+              --username $USERNAME \
+              --user-attributes Name=email,Value=$EMAIL \
+              Name=email_verified,Value=true --message-action SUPPRESS
 
+            aws cognito-idp admin-set-user-password --region eu-north-1 \
+              --user-pool-id $USER_POOL_ID \
+              --username $USERNAME \
+              --password $PASSWORD \
+              --permanent
+          fi

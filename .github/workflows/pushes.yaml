@@ -52,19 +52,6 @@ jobs:
             aws apigateway create-deployment --rest-api-id $REST_API_ID --stage-name prod \
               --region eu-north-1
 
-            CLOUDFRONT_URL=$(aws cloudformation describe-stacks --stack-name $WEBAPP_STACK --query \
-              "Stacks[0].Outputs[?OutputKey=='CloudFrontURL'].OutputValue" \
-              --output text --region eu-north-1)             
-              
-            PARAMS_W_PROD_SERVER=$(echo $MERCHANT_PARAMS | jq -c --arg url "https://$CLOUDFRONT_URL"  '.["prod-server"] = $url' | jq -R | sed 's/\\//g')
-            NEW_PARAMS="${PARAMS_W_PROD_SERVER:1:-1}"
-
-            aws cloudformation deploy --stack-name $MERCHANT_STACK \
-              --template-file trading-partner.yaml --capabilities CAPABILITY_IAM \
-              --region eu-north-1 --parameter-overrides \
-              MerchantParams=$NEW_PARAMS
-
-            gh secret set MERCHANT_PARAMS --repo Koji-Sunioj/trading-grid-cfn --body $NEW_PARAMS
           else
             echo "both required stacks do not exist"
             exit 1

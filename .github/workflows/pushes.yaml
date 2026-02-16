@@ -74,8 +74,8 @@ jobs:
           gh secret set WEBAPP_BUCKET --repo Koji-Sunioj/trading-grid --body "$WEBAPP_BUCKET"
       - name: create-cognito-user
         run: | 
-          USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK --query \
-            "Stacks[0].Outputs[?OutputKey=='UserPoolID'].OutputValue" --output text)
+          USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name --region eu-north-1 \
+            $MERCHANT_STACK --query "Stacks[0].Outputs[?OutputKey=='UserPoolID'].OutputValue" --output text)
 
           IFS=, read -r USERNAME EMAIL PASSWORD  <<< $MERCHANT_USER
 

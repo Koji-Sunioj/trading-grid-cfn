@@ -79,13 +79,13 @@ jobs:
 
           IFS=, read -r USERNAME EMAIL PASSWORD  <<< $MERCHANT_USER
 
-          aws cognito-idp admin-create-user \
+          aws cognito-idp admin-create-user --region eu-north-1 \
             --user-pool-id $USER_POOL_ID \
             --username $USERNAME \
             --user-attributes Name=email,Value=$EMAIL \
             Name=email_verified,Value=true --message-action SUPPRESS
 
-          aws cognito-idp admin-set-user-password \
+          aws cognito-idp admin-set-user-password --region eu-north-1 \
             --user-pool-id $USER_POOL_ID \
             --username $USERNAME \
             --password $PASSWORD \

@@ -13,6 +13,7 @@ env:
   WEBAPP_STACK: ${{ secrets.WEBAPP_STACK }}
   GITHUB_TOKEN: ${{ secrets.TOKEN }}
   MERCHANT_PARAMS: ${{ secrets.MERCHANT_PARAMS }}
+  MERCHANT_USER: ${{ secrets.MERCHANT_USER }}
 
 jobs:
   deploy-rest-api:
@@ -71,4 +72,22 @@ jobs:
           gh secret set LAMBDAS --repo Koji-Sunioj/trading-grid --body "$LAMBDAS"
           gh secret set REST_API_URL --repo Koji-Sunioj/trading-grid --body "$REST_API_URL"
           gh secret set WEBAPP_BUCKET --repo Koji-Sunioj/trading-grid --body "$WEBAPP_BUCKET"
+      - name: create-cognito-user
+        run: | 
+          USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK --query \
+            "Stacks[0].Outputs[?OutputKey=='UserPoolID'].OutputValue" --output text)
+
+          IFS=, read -r USERNAME EMAIL PASSWORD  <<< $MERCHANT_USER
+
+          aws cognito-idp admin-create-user \
+            --user-pool-id $USER_POOL_ID \
+            --username $USERNAME \
+            --user-attributes Name=email,Value=$EMAIL \
+            Name=email_verified,Value=true --message-action SUPPRESS
+
+          aws cognito-idp admin-set-user-password \
+            --user-pool-id $USER_POOL_ID \
+            --username $USERNAME \
+            --password $PASSWORD \
+            --permanent
 

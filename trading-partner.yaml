@@ -2,6 +2,9 @@ Parameters:
   MerchantParams:
     Description: parameters for lambda functions
     Type: String
+  FunctionVersion:
+    Description: version id for zip file with functions
+    Type: String
 
 Resources:
   ShipmentOrdersTable:
@@ -159,6 +162,7 @@ Resources:
       Code:
         S3Bucket: black-metal-666
         S3Key: functions.zip
+        S3ObjectVersion: !Ref FunctionVersion 
       Runtime: python3.10
       Timeout: 60
       Layers:
@@ -174,6 +178,7 @@ Resources:
       Code:
         S3Bucket: black-metal-666
         S3Key: functions.zip
+        S3ObjectVersion: !Ref FunctionVersion 
       Runtime: python3.10
       Timeout: 60
   MerchantERPFunction:
@@ -191,6 +196,7 @@ Resources:
       Code:
         S3Bucket: black-metal-666
         S3Key: functions.zip
+        S3ObjectVersion: !Ref FunctionVersion 
       Runtime: python3.10
       Timeout: 60
       Layers:
@@ -210,6 +216,7 @@ Resources:
       Code:
         S3Bucket: black-metal-666
         S3Key: functions.zip
+        S3ObjectVersion: !Ref FunctionVersion 
       Runtime: python3.10
       Timeout: 60
       Layers:
@@ -222,6 +229,7 @@ Resources:
       Code:
         S3Bucket: black-metal-666
         S3Key: functions.zip
+        S3ObjectVersion: !Ref FunctionVersion
       Runtime: python3.10
       Timeout: 60
       Layers:

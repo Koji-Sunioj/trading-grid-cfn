@@ -14,6 +14,7 @@ env:
   GITHUB_TOKEN: ${{ secrets.TOKEN }}
   MERCHANT_PARAMS: ${{ secrets.MERCHANT_PARAMS }}
   MERCHANT_USER: ${{ secrets.MERCHANT_USER }}
+  FUNCTION_BUCKET: ${{ secrets.FUNCTION_BUCKET }}
 
 jobs:
   deploy-rest-api:
@@ -21,9 +22,17 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - run: |
+          VERSIONS=$(aws s3api list-object-versions --bucket $FUNCTION_BUCKET --region eu-north-1 \
+            --prefix functions.zip --query "Versions")
+
+          VERSION_ID=$(echo $VERSIONS | jq -r '.[] | select(.IsLatest == true).VersionId')
+
+          echo $VERSION_ID
+
           aws cloudformation deploy --stack-name $MERCHANT_STACK \
             --template-file trading-partner.yaml --capabilities CAPABILITY_IAM \
             --region eu-north-1 --parameter-overrides \
+            FunctionVersion=$VERSION_ID \
             MerchantParams=$MERCHANT_PARAMS
   deploy-webapp:
     needs: deploy-rest-api

@@ -52,7 +52,8 @@ jobs:
       - uses: actions/checkout@v6
       - name: update-api-gateway
         run: |
-          CREATED_STACKS=$(aws cloudformation describe-stacks --query "Stacks[?StackName=='$WEBAPP_STACK'||StackName=='$MERCHANT_STACK']" \
+          CREATED_STACKS=$(aws cloudformation describe-stacks --query \
+            "Stacks[?StackName=='$WEBAPP_STACK'||StackName=='$MERCHANT_STACK']" \
             --region eu-north-1 --no-cli-pager | jq length)
 
           if [[ $CREATED_STACKS == 2 ]]
@@ -80,7 +81,6 @@ jobs:
             "Stacks[0].Outputs[?OutputKey=='WebAppBucket'].OutputValue" \
             --output text --region eu-north-1)
 
-          gh secret set LAMBDAS --repo Koji-Sunioj/trading-grid --body "$LAMBDAS"
           gh secret set REST_API_URL --repo Koji-Sunioj/trading-grid --body "$REST_API_URL"
           gh secret set WEBAPP_BUCKET --repo Koji-Sunioj/trading-grid --body "$WEBAPP_BUCKET"
       - name: create-cognito-user

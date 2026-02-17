@@ -2,9 +2,8 @@ name: initiate-apps
 
 on:
   workflow_dispatch:
-  on:
-    repository_dispatch:
-      types: [updated-function-zip]
+  repository_dispatch:
+    types: [updated-function-zip]
   push:
     branches:
       - main

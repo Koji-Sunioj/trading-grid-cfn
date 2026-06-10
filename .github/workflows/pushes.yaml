@@ -80,7 +80,7 @@ jobs:
             --query "Stacks[0].Outputs[?OutputKey=='CloudFrontURL'].OutputValue" \
             --output text --region eu-north-1)
 
-          WEBAPP_BUCKET=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK \
+          WEBAPP_BUCKET=$(aws cloudformation describe-stacks --stack-name $WEBAPP_STACK \
             --query "Stacks[0].Outputs[?OutputKey=='WebAppBucket'].OutputValue" \
             --output text --region eu-north-1)
 

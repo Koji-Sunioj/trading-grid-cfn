@@ -29,6 +29,8 @@ jobs:
 
           VERSION_ID=$(echo $VERSIONS | jq -r '.[] | select(.IsLatest == true).VersionId')
 
+          echo $VERSION_ID
+
           aws cloudformation deploy --stack-name $MERCHANT_STACK \
             --template-file trading-partner.yaml --capabilities CAPABILITY_IAM \
             --region eu-north-1 --parameter-overrides \

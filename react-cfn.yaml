@@ -38,6 +38,10 @@ Resources:
             S3OriginConfig:
               OriginAccessIdentity: ""
           - DomainName: !Sub "${APIGatewayID}.execute-api.${AWS::Region}.amazonaws.com"
+            CustomOriginConfig:
+              HTTPPort: 80
+              HTTPSPort: 443
+              IpAddressType: dualstack
             Id: APIGateway
         CacheBehaviors:
           - PathPattern: "/api/*"

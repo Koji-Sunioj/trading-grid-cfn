@@ -561,7 +561,7 @@ Resources:
     Properties:
       RestApiId: !Ref RestApi
       Description: My deployment
-      StageName: prod
+      StageName: api 
 
 Outputs:
   RestAPIID:

@@ -1,3 +1,8 @@
+Parameters:
+  APIGatewayID:
+    Description: URL for api gateway
+    Type: String
+
 Resources:
   WebAppBucket:
     Type: AWS::S3::Bucket
@@ -26,18 +31,28 @@ Resources:
     Type: AWS::CloudFront::Distribution
     Properties:
       DistributionConfig:
-        Origins:
+        Origins: 
           - DomainName: !GetAtt WebAppBucket.RegionalDomainName
             Id: WebAppBuckPointer
             OriginAccessControlId: !Ref CloudFrontOriginAccessControl
             S3OriginConfig:
               OriginAccessIdentity: ""
+          - DomainName: !Sub "${APIGatewayID}.execute-api.${AWS::Region}.amazonaws.com"
+            Id: APIGateway
+        CacheBehaviors:
+          - PathPattern: "/api/*"
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+            TargetOriginId: APIGateway
+            ViewerProtocolPolicy: "allow-all"
+            AllowedMethods: [DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT]
+            Compress: false
+            OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3
         DefaultRootObject: index.html
-        Enabled: true
         DefaultCacheBehavior:
           TargetOriginId: WebAppBuckPointer
           ViewerProtocolPolicy: allow-all
           CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+        Enabled: true
 Outputs:
   CloudFrontID:
     Value: !GetAtt CloudFrontDistribution.Id

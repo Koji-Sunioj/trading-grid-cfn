@@ -29,8 +29,6 @@ jobs:
 
           VERSION_ID=$(echo $VERSIONS | jq -r '.[] | select(.IsLatest == true).VersionId')
 
-          echo $VERSION_ID
-
           aws cloudformation deploy --stack-name $MERCHANT_STACK \
             --template-file trading-partner.yaml --capabilities CAPABILITY_IAM \
             --region eu-north-1 --parameter-overrides \
@@ -42,9 +40,12 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - run: |
+          RESTAPI_ID=$(aws cloudformation describe-stacks --stack-name merchant-api --query "Stacks[0].Outputs[?OutputKey=='RestAPIID'].OutputValue" --output text)
+          
           aws cloudformation deploy --stack-name $WEBAPP_STACK \
             --template-file react-cfn.yaml --capabilities CAPABILITY_IAM \
-            --region eu-north-1
+            --region eu-north-1 --parameter-overrides \
+            APIGatewayID=$RESTAPI_ID
   clean-up:
     needs: deploy-webapp
     runs-on: "ubuntu-latest"
@@ -62,7 +63,7 @@ jobs:
               --query "Stacks[0].Outputs[?OutputKey=='RestAPIID'].OutputValue" \
               --output text --region eu-north-1)
 
-            aws apigateway create-deployment --rest-api-id $REST_API_ID --stage-name prod \
+            aws apigateway create-deployment --rest-api-id $REST_API_ID --stage-name api \
               --region eu-north-1
 
           else
@@ -71,17 +72,15 @@ jobs:
           fi
       - name: update-client-secret
         run: |
-          MERCHANT_STACK_OUTPUTS=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK --region eu-north-1 \
-            --query "Stacks[0].Outputs")
-
-          LAMBDAS=$(echo $MERCHANT_STACK_OUTPUTS | jq -r '.[] |  select(.OutputKey=="Lambdas").OutputValue')
-          REST_API_URL=$(echo $MERCHANT_STACK_OUTPUTS | jq -r '.[] |  select(.OutputKey=="RestAPIURL").OutputValue')
- 
-          WEBAPP_BUCKET=$(aws cloudformation describe-stacks --stack-name $WEBAPP_STACK --query \
-            "Stacks[0].Outputs[?OutputKey=='WebAppBucket'].OutputValue" \
+          CLOUDFRONT_URL=$(aws cloudformation describe-stacks --stack-name $WEBAPP_STACK \
+            --query "Stacks[0].Outputs[?OutputKey=='CloudFrontURL'].OutputValue" \
             --output text --region eu-north-1)
 
-          gh secret set REST_API_URL --repo Koji-Sunioj/trading-grid --body "$REST_API_URL"
+          WEBAPP_BUCKET=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK \
+            --query "Stacks[0].Outputs[?OutputKey=='WebAppBucket'].OutputValue" \
+            --output text --region eu-north-1)
+
+          gh secret set REST_API_URL --repo Koji-Sunioj/trading-grid --body "https://$CLOUDFRONT_URL/api/"
           gh secret set WEBAPP_BUCKET --repo Koji-Sunioj/trading-grid --body "$WEBAPP_BUCKET"
       - name: create-cognito-user
         run: | 

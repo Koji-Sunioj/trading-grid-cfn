@@ -42,8 +42,7 @@ Resources:
             CustomOriginConfig:
               HTTPPort: 80
               HTTPSPort: 443
-              IpAddressType: dualstack
-              OriginProtocolPolicy: match-viewer
+              OriginProtocolPolicy: https-only
               OriginSSLProtocols:
                 - TLSv1.2
         CacheBehaviors:

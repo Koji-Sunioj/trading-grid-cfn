@@ -31,7 +31,7 @@ Resources:
     Type: AWS::CloudFront::Distribution
     Properties:
       DistributionConfig:
-        Origins: 
+        Origins:
           - DomainName: !GetAtt WebAppBucket.RegionalDomainName
             Id: WebAppBuckPointer
             OriginAccessControlId: !Ref CloudFrontOriginAccessControl
@@ -52,7 +52,16 @@ Resources:
             ViewerProtocolPolicy: "allow-all"
             AllowedMethods: [DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT]
             Compress: false
-            OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac 
+            OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac
+        CustomErrorResponse:
+          - ErrorCode: 403
+            ResponsePagePath: "/index.html"
+            ResponseCode: 200
+            ErrorCachingMinTTL: 30
+          - ErrorCode: 404
+            ResponsePagePath: "/index.html"
+            ResponseCode: 200
+            ErrorCachingMinTTL: 30
         DefaultRootObject: index.html
         DefaultCacheBehavior:
           TargetOriginId: WebAppBuckPointer

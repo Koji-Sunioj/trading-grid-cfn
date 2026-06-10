@@ -42,7 +42,9 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - run: |
-          RESTAPI_ID=$(aws cloudformation describe-stacks --stack-name merchant-api --query "Stacks[0].Outputs[?OutputKey=='RestAPIID'].OutputValue" --output text)
+          RESTAPI_ID=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK \
+            --query "Stacks[0].Outputs[?OutputKey=='RestAPIID'].OutputValue" \
+            --output text --region eu-north-1)
           
           aws cloudformation deploy --stack-name $WEBAPP_STACK \
             --template-file react-cfn.yaml --capabilities CAPABILITY_IAM \

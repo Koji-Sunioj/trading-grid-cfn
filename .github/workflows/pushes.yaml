@@ -84,7 +84,7 @@ jobs:
             --query "Stacks[0].Outputs[?OutputKey=='WebAppBucket'].OutputValue" \
             --output text --region eu-north-1)
 
-          gh secret set REST_API_URL --repo Koji-Sunioj/trading-grid --body "https://$CLOUDFRONT_URL/api/"
+          gh secret set REST_API_URL --repo Koji-Sunioj/trading-grid --body "https://$CLOUDFRONT_URL/api"
           gh secret set WEBAPP_BUCKET --repo Koji-Sunioj/trading-grid --body "$WEBAPP_BUCKET"
       - name: create-cognito-user
         run: | 

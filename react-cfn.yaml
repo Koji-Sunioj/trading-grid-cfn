@@ -53,7 +53,7 @@ Resources:
             AllowedMethods: [DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT]
             Compress: false
             OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac
-        CustomErrorResponse:
+        CustomErrorResponses:
           - ErrorCode: 403
             ResponsePagePath: "/index.html"
             ResponseCode: 200

@@ -561,7 +561,12 @@ Resources:
     Properties:
       RestApiId: !Ref RestApi
       Description: My deployment
-      StageName: api 
+      #StageName: api 
+  APIStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId: !Ref RestApi
+      StageName: api
 
 Outputs:
   RestAPIID:

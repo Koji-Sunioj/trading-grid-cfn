@@ -44,6 +44,8 @@ Resources:
               HTTPSPort: 443
               IpAddressType: dualstack
               OriginProtocolPolicy: match-viewer
+              OriginSSLProtocols:
+                - TLSv1.2
         CacheBehaviors:
           - PathPattern: "/api/*"
             CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad

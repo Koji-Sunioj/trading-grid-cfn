@@ -541,7 +541,7 @@ Resources:
       FunctionName: !GetAtt ClientERPFunction.Arn
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/*"
-  Deployment:
+  APIDeployment:
     DependsOn:
       - RoutingTableGETMethod
       - RoutingTablePOSTTMethod
@@ -560,12 +560,12 @@ Resources:
     Type: "AWS::ApiGateway::Deployment"
     Properties:
       RestApiId: !Ref RestApi
-      Description: My deployment
-      StageName: prod 
+      #Description: My deployment
+      #StageName: prod 
   APIStage:
     Type: AWS::ApiGateway::Stage
     Properties:
-      DeploymentId: !Ref Deployment
+      DeploymentId: !Ref APIDeployment
       RestApiId: !Ref RestApi
       StageName: api
 

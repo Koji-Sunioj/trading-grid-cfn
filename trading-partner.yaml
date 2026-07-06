@@ -560,8 +560,6 @@ Resources:
     Type: "AWS::ApiGateway::Deployment"
     Properties:
       RestApiId: !Ref RestApi
-      #Description: My deployment
-      #StageName: prod 
   APIStage:
     Type: AWS::ApiGateway::Stage
     Properties:

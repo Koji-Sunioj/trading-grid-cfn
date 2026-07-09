@@ -231,6 +231,7 @@ Resources:
       Timeout: 60
       Layers:
         - !Ref ERPLayer
+        - !Ref PydanticLayer
   CORSLog:
     Type: AWS::Logs::LogGroup
     Properties:

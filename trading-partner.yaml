@@ -191,6 +191,7 @@ Resources:
       Timeout: 60
       Layers: 
         - !Ref PydanticLayer
+        - !Ref ERPLayer
   MerchantERPFunction:
     Type: AWS::Lambda::Function
     Properties:

@@ -212,6 +212,7 @@ Resources:
       Timeout: 60
       Layers:
         - !Ref ERPLayer
+        - !Ref PydanticLayer
   ClientERPFunction:
     Type: AWS::Lambda::Function
     Properties:

@@ -177,6 +177,10 @@ Resources:
     Properties:
       Handler: socket.handler
       Role: !GetAtt LambdaRole.Arn
+      Environment:
+        Variables:
+          SOCKETS_TABLE: !Ref WSConnectionsTable
+          ROUTING_TABLE: !Ref ClientRoutingTable
       Code:
         S3Bucket: black-metal-666
         S3Key: functions.zip
@@ -278,6 +282,58 @@ Resources:
     Properties:
       LogGroupName: !Sub "/aws/lambda/${ClientERPFunction}"
       RetentionInDays: 5
+  WebSocketAPI:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: WebsocketAPI
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: "$request.body.action"
+  SocketLambdaIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      IntegrationMethod: POST
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SocketFunction.Arn}/invocations"
+  SocketConnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      RouteKey: $connect
+      Target: !Sub integrations/${SocketLambdaIntegration}
+  SocketDisconnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      RouteKey: $disconnect
+      Target: !Sub integrations/${SocketLambdaIntegration}
+  SocketApiGatewayDeployment:
+    Type: AWS::ApiGatewayV2::Deployment
+    DependsOn:
+      - SocketDisconnectRoute
+      - SocketConnectRoute
+    Properties:
+      Description: Lambda API Deployment
+      ApiId: !Ref WebSocketAPI
+  SocketLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: 
+        - !Sub ${WebSocketAPI}/access-logs
+  SocketApiGatewayStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      DeploymentId: !Ref SocketApiGatewayDeployment
+      ApiId: !Ref WebSocketAPI
+      StageName: "api"
+      DefaultRouteSettings:
+        DetailedMetricsEnabled: true
+        LoggingLevel: INFO
+        DataTraceEnabled: false
+        ThrottlingBurstLimit: 10
+      AccessLogSettings:
+        DestinationArn: !GetAtt SocketLogGroup.Arn
+        Format: [$context.requestTime - $context.extendedRequestId - $context.status]: $context.identity.sourceIp - $context.httpMethod - $context.resourcePath - $context.protocol
   RestApi:
     Type: AWS::ApiGateway::RestApi
     Properties:

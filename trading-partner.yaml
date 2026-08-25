@@ -319,7 +319,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: 
-        - !Sub ${WebSocketAPI}/access-logs
+        - websocket-access-logs
   SocketApiGatewayStage:
     Type: AWS::ApiGatewayV2::Stage
     Properties:

@@ -333,7 +333,7 @@ Resources:
         ThrottlingBurstLimit: 10
       AccessLogSettings:
         DestinationArn: !GetAtt SocketLogGroup.Arn
-        Format: [$context.requestTime - $context.extendedRequestId - $context.status]: $context.identity.sourceIp - $context.httpMethod - $context.resourcePath - $context.protocol
+        Format: $context.identity.sourceIp [$context.requestTime]"$context.httpMethod $context.resourcePath $context.protocol" $context.status $context.requestId 
   RestApi:
     Type: AWS::ApiGateway::RestApi
     Properties:

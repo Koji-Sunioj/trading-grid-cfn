@@ -317,9 +317,6 @@ Resources:
       ApiId: !Ref WebSocketAPI
   SocketLogGroup:
     Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: 
-        - websocketaccesslogs
   SocketApiGatewayStage:
     Type: AWS::ApiGatewayV2::Stage
     Properties:

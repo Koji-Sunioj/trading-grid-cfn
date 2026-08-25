@@ -187,6 +187,8 @@ Resources:
         S3ObjectVersion: !Ref FunctionVersion 
       Runtime: python3.10
       Timeout: 60
+      Layers:
+        - !Ref ERPLayer
   CORSFunction:
     Type: AWS::Lambda::Function
     Properties:

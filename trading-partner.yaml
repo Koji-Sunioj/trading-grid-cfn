@@ -172,7 +172,6 @@ Resources:
       Content:
         S3Bucket: black-metal-666
         S3Key: pydantic_python3.10.zip
-
   SocketFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -180,7 +179,8 @@ Resources:
       Role: !GetAtt LambdaRole.Arn
       Code:
         S3Bucket: black-metal-666
-        S3Key: fucntions.zip
+        S3Key: functions.zip
+        S3ObjectVersion: !Ref FunctionVersion 
       Runtime: python3.10
       Timeout: 60
   CORSFunction:

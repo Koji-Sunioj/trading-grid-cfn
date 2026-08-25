@@ -7,6 +7,16 @@ Parameters:
     Type: String
 
 Resources:
+  WSConnectionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: "connection_id"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "connection_id"
+          KeyType: "HASH"
   ShipmentOrdersTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -143,6 +153,9 @@ Resources:
               - Effect: "Allow"
                 Action: "logs:*"
                 Resource: "arn:aws:logs:*:*:*"
+              - Effect: "Allow"
+                Action: "*"
+                Resource: "arn:aws:execute-api:*:*:*"
   ERPLayer:
     Type: AWS::Lambda::LayerVersion
     Properties:
@@ -159,6 +172,17 @@ Resources:
       Content:
         S3Bucket: black-metal-666
         S3Key: pydantic_python3.10.zip
+
+  SocketFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: socket.handler
+      Role: !GetAtt LambdaRole.Arn
+      Code:
+        S3Bucket: black-metal-666
+        S3Key: fucntions.zip
+      Runtime: python3.10
+      Timeout: 60
   CORSFunction:
     Type: AWS::Lambda::Function
     Properties:

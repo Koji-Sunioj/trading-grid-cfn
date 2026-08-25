@@ -175,7 +175,7 @@ Resources:
   SocketFunction:
     Type: AWS::Lambda::Function
     Properties:
-      Handler: socket.handler
+      Handler: websocket.handler
       Role: !GetAtt LambdaRole.Arn
       Environment:
         Variables:

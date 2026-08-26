@@ -84,8 +84,13 @@ jobs:
             --query "Stacks[0].Outputs[?OutputKey=='WebAppBucket'].OutputValue" \
             --output text --region eu-north-1)
 
+          WEBSOCKET_URL=$(aws cloudformation describe-stacks --stack-name $MERCHANT_STACK \
+            --query "Stacks[0].Outputs[?OutputKey=='WebsocketURL'].OutputValue" \
+            --output text --region eu-north-1)
+
           gh secret set REST_API_URL --repo Koji-Sunioj/trading-grid --body "https://$CLOUDFRONT_URL/api"
           gh secret set WEBAPP_BUCKET --repo Koji-Sunioj/trading-grid --body "$WEBAPP_BUCKET"
+          gh secret set WEBSOCKET_URL --repo Koji-Sunioj/trading-grid --body "$WEBSOCKET_URL"
       - name: create-cognito-user
         run: | 
           IFS=, read -r USERNAME EMAIL PASSWORD  <<< $MERCHANT_USER

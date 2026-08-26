@@ -690,7 +690,7 @@ Outputs:
     Value: !Ref RestApi
   WebsocketURL:
     Description: Rest API URL
-    Value: !Sub "wss://${WebSocketAPI}.execute-api.${AWS::Region}.amazonaws.com/api"
+    Value: !Sub "wss://${WebSocketAPI}.execute-api.${AWS::Region}.amazonaws.com/api/"
   #RestAPIURL:
   #  Description: Rest API URL
   #  Value: !Sub "https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/prod"

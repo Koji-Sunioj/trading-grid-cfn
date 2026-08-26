@@ -7,6 +7,20 @@ Parameters:
     Type: String
 
 Resources:
+  WSTokenTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: "token_hash"
+          AttributeType: "S"
+        - AttributeName: "username"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "token_hash"
+          KeyType: "HASH"
+        - AttributeName: "username"
+          KeyType: "RANGE"
   WSConnectionsTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -151,6 +165,9 @@ Resources:
                 Action: "*"
                 Resource: !GetAtt ClientRoutingTable.Arn
               - Effect: "Allow"
+                Action: "*"
+                Resource: !GetAtt WSTokenTable.Arn
+              - Effect: "Allow"
                 Action: "logs:*"
                 Resource: "arn:aws:logs:*:*:*"
               - Effect: "Allow"
@@ -181,6 +198,7 @@ Resources:
         Variables:
           SOCKETS_TABLE: !Ref WSConnectionsTable
           ROUTING_TABLE: !Ref ClientRoutingTable
+          WS_TOKEN_TABLE: !Ref WSTokenTable
       Code:
         S3Bucket: black-metal-666
         S3Key: functions.zip
@@ -213,6 +231,7 @@ Resources:
       Environment:
         Variables:
           USER_POOL_ID: !GetAtt UserPoolClient.ClientId
+          WS_TOKEN_TABLE: !Ref WSTokenTable
       Code:
         S3Bucket: black-metal-666
         S3Key: functions.zip

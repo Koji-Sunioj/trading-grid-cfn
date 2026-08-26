@@ -688,9 +688,12 @@ Outputs:
   RestAPIID:
     Description: Rest API ID
     Value: !Ref RestApi
-  RestAPIURL:
+  WebsocketURL:
     Description: Rest API URL
-    Value: !Sub "https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/prod"
+    Value: !Sub "https://${WebSocketAPI}.execute-api.${AWS::Region}.amazonaws.com/api"
+  #RestAPIURL:
+  #  Description: Rest API URL
+  #  Value: !Sub "https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/prod"
   UserPoolID:
     Description: Cognito user pool ID
     Value: !GetAtt CognitoPool.UserPoolId

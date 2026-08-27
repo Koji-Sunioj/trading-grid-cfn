@@ -252,6 +252,7 @@ Resources:
           ROUTING_TABLE: !Ref ClientRoutingTable
           DISPATCH_TABLE: !Ref ShipmentOrdersTable
           PO_AMMENDMENT_TABLE: !Ref PurchaseOrdersAmmendmentsTable
+          SOCKETS_TABLE: !Ref WSConnectionsTable
       Code:
         S3Bucket: black-metal-666
         S3Key: functions.zip
@@ -273,6 +274,7 @@ Resources:
           ROUTING_TABLE: !Ref ClientRoutingTable
           DISPATCH_TABLE: !Ref ShipmentOrdersTable
           PO_AMMENDMENT_TABLE: !Ref PurchaseOrdersAmmendmentsTable
+          SOCKETS_TABLE: !Ref WSConnectionsTable
       Code:
         S3Bucket: black-metal-666
         S3Key: functions.zip

@@ -383,7 +383,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref SocketFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*/update
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*/ping
   RestApi:
     Type: AWS::ApiGateway::RestApi
     Properties:

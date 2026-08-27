@@ -377,6 +377,13 @@ Resources:
       FunctionName: !Ref SocketFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*/$disconnect
+  SocketLambdaUpdatePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref SocketFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*/update
   RestApi:
     Type: AWS::ApiGateway::RestApi
     Properties:

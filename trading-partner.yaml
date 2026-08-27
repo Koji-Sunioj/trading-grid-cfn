@@ -332,11 +332,18 @@ Resources:
       ApiId: !Ref WebSocketAPI
       RouteKey: $disconnect
       Target: !Sub integrations/${SocketLambdaIntegration}
+  SocketPingRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      RouteKey: ping
+      Target: !Sub integrations/${SocketLambdaIntegration}
   SocketApiGatewayDeployment:
     Type: AWS::ApiGatewayV2::Deployment
     DependsOn:
       - SocketDisconnectRoute
       - SocketConnectRoute
+      - SocketPingRoute
     Properties:
       Description: Lambda API Deployment
       ApiId: !Ref WebSocketAPI

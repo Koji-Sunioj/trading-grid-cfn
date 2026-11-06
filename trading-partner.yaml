@@ -182,23 +182,15 @@ Resources:
         - python3.14
       Content:
         S3Bucket: !Ref FunctionBucket
-        S3Key: layers/requests_3.14.zip #pydantic_python3.10.zip
-  ERPLayer:
-    Type: AWS::Lambda::LayerVersion
-    Properties:
-      CompatibleRuntimes:
-        - python3.10
-      Content:
-        S3Bucket: black-metal-666
-        S3Key: lambda_layer.zip
+        S3Key: layers/requests_3.14.zip 
   PydanticLayer:
     Type: AWS::Lambda::LayerVersion
     Properties:
       CompatibleRuntimes:
         - python3.14
       Content:
-        S3Bucket: !Ref FunctionBucket #black-metal-666
-        S3Key: layers/pydantic_3.14.zip #pydantic_python3.10.zip
+        S3Bucket: !Ref FunctionBucket
+        S3Key: layers/pydantic_3.14.zip
   SocketFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -210,16 +202,11 @@ Resources:
           ROUTING_TABLE: !Ref ClientRoutingTable
           WS_TOKEN_TABLE: !Ref WSTokenTable
       Code:
-        S3Bucket: !Ref FunctionBucket #black-metal-666
+        S3Bucket: !Ref FunctionBucket
         S3Key: functions/trading_grid_functions.zip
         S3ObjectVersion: !Ref FunctionVersion 
-        #S3Bucket: black-metal-666
-        #S3Key: functions.zip
-        #S3ObjectVersion: !Ref FunctionVersion 
       Runtime: python3.14
       Timeout: 60
-      #Layers:
-      #  - !Ref ERPLayer
   CORSFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -229,16 +216,11 @@ Resources:
         Variables:
           MERCHANT_PARAMS: !Ref MerchantParams
       Code:
-        S3Bucket: !Ref FunctionBucket #black-metal-666
+        S3Bucket: !Ref FunctionBucket
         S3Key: functions/trading_grid_functions.zip
         S3ObjectVersion: !Ref FunctionVersion 
-        #S3Bucket: black-metal-666
-        #S3Key: functions.zip
-        #S3ObjectVersion: !Ref FunctionVersion 
       Runtime: python3.14
       Timeout: 60
-      #Layers:
-      #  - !Ref ERPLayer
   AuthFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -249,14 +231,13 @@ Resources:
           USER_POOL_ID: !GetAtt UserPoolClient.ClientId
           WS_TOKEN_TABLE: !Ref WSTokenTable
       Code:
-        S3Bucket: !Ref FunctionBucket #black-metal-666
+        S3Bucket: !Ref FunctionBucket 
         S3Key: functions/trading_grid_functions.zip
         S3ObjectVersion: !Ref FunctionVersion 
       Runtime: python3.14
       Timeout: 60
       Layers: 
         - !Ref PydanticLayer
-        #- !Ref ERPLayer
   MerchantERPFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -271,16 +252,12 @@ Resources:
           PO_AMMENDMENT_TABLE: !Ref PurchaseOrdersAmmendmentsTable
           SOCKETS_TABLE: !Ref WSConnectionsTable
       Code:
-        S3Bucket: !Ref FunctionBucket #black-metal-666
+        S3Bucket: !Ref FunctionBucket 
         S3Key: functions/trading_grid_functions.zip
         S3ObjectVersion: !Ref FunctionVersion 
-        #S3Bucket: black-metal-666
-        #S3Key: functions.zip
-        #S3ObjectVersion: !Ref FunctionVersion 
       Runtime: python3.14
       Timeout: 60
       Layers:
-        #- !Ref ERPLayer
         - !Ref RequestsLayer 
         - !Ref PydanticLayer
   ClientERPFunction:
@@ -297,16 +274,12 @@ Resources:
           PO_AMMENDMENT_TABLE: !Ref PurchaseOrdersAmmendmentsTable
           SOCKETS_TABLE: !Ref WSConnectionsTable
       Code:
-        S3Bucket: !Ref FunctionBucket #black-metal-666
+        S3Bucket: !Ref FunctionBucket 
         S3Key: functions/trading_grid_functions.zip
         S3ObjectVersion: !Ref FunctionVersion 
-        #S3Bucket: black-metal-666
-        #S3Key: functions.zip
-        #S3ObjectVersion: !Ref FunctionVersion 
       Runtime: python3.14
       Timeout: 60
       Layers:
-        #- !Ref ERPLayer
         - !Ref RequestsLayer 
         - !Ref PydanticLayer
   SocketLambdaLog:
@@ -732,9 +705,6 @@ Outputs:
   WebsocketURL:
     Description: Rest API URL
     Value: !Sub "wss://${WebSocketAPI}.execute-api.${AWS::Region}.amazonaws.com/api/"
-  #RestAPIURL:
-  #  Description: Rest API URL
-  #  Value: !Sub "https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/prod"
   UserPoolID:
     Description: Cognito user pool ID
     Value: !GetAtt CognitoPool.UserPoolId
